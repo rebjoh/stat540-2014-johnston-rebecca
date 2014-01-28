@@ -1,2 +1,4 @@
 stat540-2014-johnston-rebecca
-___
+===
+
+Submissions for STAT540 seminars by Rebecca Johnston, UBC 2014.
