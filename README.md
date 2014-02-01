@@ -1,4 +1,5 @@
 stat540-2014-johnston-rebecca
 ===
 
-Submissions for STAT540 seminars by Rebecca Johnston, UBC Jan - Apr 2014.
+_STAT540 Statistical Methods for High Dimensional Biology, UBC Jan - Apr 2014_  
+Seminar submissions by Rebecca Johnston
