@@ -1,0 +1,405 @@
+STAT540 Seminar 03: Introduction to R graphics using ggplot2
+---
+_Rebecca Johnston 22/01/13_
+
+* <dim id="1a">[Load required packages](#1b)
+* <dim id="2a">[Read photoRec data](#2b)
+* <dim id="3a">[Scatter plots](#3b)
+* <dim id="4a">[Strip plots](#4b)
+* <dim id="5a">[Density plots](#5b)
+* <dim id="6a">[Boxplots](#6b)
+* <dim id="7a">[Overplotting and plot matrix](#7b)
+* <dim id="8a">[Take home problem](#8b)
+
+            
+### <dim id="1b">[Load required packages](#1b)
+```{r}
+library("ggplot2") # for graphing
+library("hexbin") # for making hexbin objects
+library("reshape2") # for reshaping data from wide to tall format (melt)
+```
+
+
+### <dim id="2b">[Read photoRec data](#2b)
+Save rds file from [STAT540 github](https://github.com/jennybc/stat540_2014/blob/master/examples/photoRec/data). Note this is a different data structure compared to sem01. There are now 7 variables including sidChar and sidNum.
+
+```{r}
+kDat <- readRDS("GSE4051_MINI.rds")
+```
+
+Sanity checks to ensure the data loaded successfully:
+```{r}
+str(kDat)
+head(kDat)
+table(kDat$devStage, kDat$gType)
+```
+
+
+### <dim id="3b">[Scatter plots](#3b)
+Scatter plots "geom_point"
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(kDat, aes(x = crabHammer, y = eggBomb)) +
+   geom_point())
+```
+
+Add smoothing line "stat_smooth"
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- p + stat_smooth())
+```
+
+Change background and add labels:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- p + theme_bw() + # white background
+   xlab("Expression of crabHammer") + # x axis label 
+   ylab("Expression of eggBomb") + # y axis label 
+   ggtitle("Scatterplot for expression levels")) # plot title
+```
+
+__RESHAPE DATA:__  
+Convert into long format so there is a single column of gene expression values. Only keep genes "eggBomb" and "poisonFang". N.B. CrabHammer kept in separate column as a reference.
+```{r}
+nDat <-
+  with(kDat,
+       data.frame(sidChar, sidNum, devStage, gType, crabHammer,
+                  probeset = factor(rep(c("eggBomb", "poisonFang"), each = nrow(kDat))),
+                  geneExp = c(eggBomb, poisonFang)))
+str(nDat)
+```
+
+__ADD COLOUR AND SMOOTHING LINES:__  
+Assign colour by probeset column under aes arg
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(nDat, aes(crabHammer, geneExp, color = probeset)) + 
+   geom_point())
+```
+
+Add a smoothing line: "se" parameter displays standard error around smooth
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(nDat, aes(crabHammer, geneExp, color = probeset)) + 
+   geom_point() + 
+   stat_smooth(se = FALSE)) 
+```
+
+Overrule groupings in aes by specifiying new group so only one smoothing line is plotted:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(nDat, aes(crabHammer, geneExp, color = probeset)) + 
+   geom_point() + 
+   stat_smooth(se = F, aes(group = 1)))
+```
+
+__FACETTING:__
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(nDat, aes(crabHammer, geneExp)) + 
+   geom_point() + 
+   facet_wrap(~ probeset))
+```
+
+Add colour by gType:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(nDat, aes(crabHammer, geneExp, color = gType)) + 
+   geom_point() + 
+   facet_wrap(~ probeset))
+```
+
+Add colour by devStage:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(nDat, aes(crabHammer, geneExp, color = devStage)) +
+   geom_point() +
+   facet_wrap(~ probeset))
+```
+
+
+### <dim id="4b">[Strip plots](#4b)
+Also use geom_point for strip plots, but coordinates are mapped to a factor.
+
+__RESHAPE DATA:__  
+Long format so all genes in "probeset" this time!
+```{r}
+oDat <-
+  with(kDat,
+       data.frame(sidChar, sidNum, devStage, gType,
+                  probeset = factor(rep(c("crabHammer", "eggBomb",
+                                          "poisonFang"), each = nrow(kDat))),
+                  geneExp = c(crabHammer, eggBomb, poisonFang)))
+str(oDat)
+```
+
+Plot geneExp by probe using geom_point:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(oDat, aes(geneExp, probeset)) + 
+   geom_point())
+```
+
+Add jitter:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(oDat, aes(geneExp, probeset)) + 
+   geom_point(position = position_jitter(height = 0.1)))
+```
+
+Plot geneExp by devStage. Note order of x and y in aes matters!
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(oDat, aes(devStage, geneExp)) + 
+   geom_point())
+```
+
+Facetting by probeset:
+```{r fig.width = 9, fig.height = 9, fig.align = 'center'}
+(p <- p + facet_wrap(~ probeset))
+```
+
+Colour by gType:
+```{r fig.width = 9, fig.height = 9, fig.align = 'center'}
+(p <- p + aes(color = gType))
+```
+
+Add some stats, mean for each group:
+```{r fig.width = 9, fig.height = 9, fig.align = 'center'}
+(p <- p + stat_summary(fun.y = mean, geom = "point", shape = 4, size = 4))
+```
+
+
+### <dim id="5b">[Density plots](#5b)
+Gene expression across entire dataset:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(oDat, aes(geneExp)) + 
+   geom_density())
+```
+
+Remove border lines:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(oDat, aes(geneExp)) + 
+   stat_density(geom = "line", position = "identity"))
+```
+
+Add strip plot with jitter:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(oDat, aes(geneExp)) + 
+   stat_density(geom = "line", position = "identity") + 
+   geom_point(aes(y = 0.05), position = position_jitter(height = 0.005)))
+```
+
+Change bandwidth with adjust arg in stat_density:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(oDat, aes(geneExp)) + 
+   stat_density(geom = "line", position = "identity", adjust = 0.5) + 
+   geom_point(aes(y = 0.05), position = position_jitter(height = 0.005)))
+```
+
+Define color by gType:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(oDat, aes(geneExp, color = gType)) + 
+   stat_density(geom = "line", position = "identity") + 
+   geom_point(aes(y = 0.05), position = position_jitter(height = 0.005)))
+```
+
+Define colour by devStage:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(oDat, aes(geneExp, color = devStage)) + 
+   stat_density(geom = "line", position = "identity", adjust = 0.75) + 
+   geom_point(aes(y = 0.05), position = position_jitter(height = 0.01)))
+```
+
+Add facet wrap by devStage:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- p + facet_wrap(~ devStage))
+```
+
+
+### <dim id="6b">[Boxplots](#6b)
+Plot geneExp by devStage using geom_boxplot:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(oDat, aes(devStage, geneExp)) + 
+   geom_boxplot())
+```
+
+Add facet wrap by gType:
+```{r fig.align = 'center'}
+(p <- p + facet_wrap(~ gType))
+```
+
+As a violin plot instead:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(oDat, aes(devStage, geneExp)) + 
+   geom_violin())
+```
+
+
+### <dim id="7b">[Overplotting and plot matrix](#7b)
+Load complete photorec dataset and its design matrix into R after saving files locally from [STAT540 github](https://github.com/jennybc/stat540_2014/blob/master/examples/photoRec/data).
+
+Gene expression data:
+```{r}
+prDat <- read.table("GSE4051_data.tsv")
+str(prDat, max.level = 0)
+```
+
+Design matrix:
+```{r}
+prDes <- readRDS("GSE4051_design.rds")
+str(prDes)
+```
+
+Choose 2 samples (columns) at random:
+```{r}
+set.seed(2)
+(yo <- sample(1:ncol(prDat), size = 2))
+```
+
+Create new dataframe with only these 2 random samples:
+```{r}
+bDat <- data.frame(y = prDat[[yo[1]]], z = prDat[[yo[2]]])
+str(bDat)
+```
+
+Plot samples against each other using geom_point:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(bDat, aes(z, y)) + 
+   geom_point())
+```
+
+Reduce transparency using alpha arg in geom_point:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(bDat, aes(z, y)) + 
+   geom_point(alpha = 0.1))
+```
+
+Use stat_density2d function:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(bDat, aes(z, y)) + 
+   stat_density2d())
+```
+
+Fill with colour. N.B. Some functions (especially stat) return their own calculated values. Use these values by calling ..[value name].., e.g. the use of fill = ..density.. here under aes arg:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(p <- ggplot(bDat, aes(z, y)) + 
+   stat_density2d(geom = "tile", contour = FALSE, aes(fill = ..density..)) + 
+   scale_fill_gradient(low = "white", high = "blue"))
+```
+
+Use stat_binhex:
+```{r fig.align = 'center'}
+(p <- ggplot(bDat, aes(z, y)) + 
+   stat_binhex())
+```
+
+Use plotmatrix for pairwise scatterplots:
+```{r fig.align = 'center'}
+set.seed(3)
+(yo <- sample(1:ncol(prDat), size = 4))
+pairDat <- subset(prDat, select = yo)
+str(pairDat)
+(p <- plotmatrix(pairDat) + 
+   stat_binhex())
+```
+
+
+### <dim id="8b">[Take home problem](#8b)
+The full photoRec dataset has 39 samples and 29,949 probesets. Choose 2 or 20 or 200 random probesets/genes and look for gene expression differences between the two genotypes, wild type versus knockout. Make use of the graphing techniques discussed this week such as scatter plots, box plot, etc.
+
+Choose 20 random genes to start:
+```{r}
+set.seed(50)
+(someGene <- sample(nrow(prDat), 20))
+```
+
+Create new dataframe with only these 20 random genes:
+```{r}
+tDat <- prDat[someGene,]
+str(tDat, max.level = 0)
+```
+
+What structure do we need the data to be in? To use ggplot2, we will need separate columns for: probeID, sampleID, gExp, gType.
+
+What about creating a dataframe manually by writing a function? First "stack" the gene expression values:
+```{r}
+stDat <- stack(tDat)
+head(stDat) # Lose probeID
+```
+
+Write function:
+```{r}
+makeDf <- function(a, b, c){
+ # a = tDat
+ # b = stDat
+ # c = prDes
+ probeID <- as.factor(row.names(a))
+ gExp <- b$values # I don't like this code :S better way to get gExp values?
+ gType <- c$gType
+ sID <- c$sidChar 
+ data.frame(probeID, gExp, gType)
+ }
+ 
+# Call function
+newDf <- makeDf(tDat, stDat, prDes)
+head(newDf)
+```
+I don't know if I trust the above result... particularly whether the gene expression values match the correct sample... Is there a simple way I could check this?
+
+I will use the reshape package instead. First, need to make row names a column:
+```{r}
+tDat <- data.frame(probeID = row.names(tDat), tDat)
+head(tDat, n = 3)
+```
+
+Reshape to tall format using melt, where ID variable is "probeID":
+```{r}
+tDat <- melt(tDat, id.vars = "probeID")
+head(tDat, n = 3)
+names(tDat) <- c("probeID", "sidChar", "gExp") # Rename columns
+```
+
+Merge prDes to obtain gType using "sidChar" as common column:
+```{r}
+tDat <- merge(tDat, prDes, by = "sidChar")
+```
+
+For simplicity, rename probes to smaller names:
+```{r}
+levels(tDat$probeID) <- c(LETTERS[1:length(levels(tDat$probeID))])
+```
+
+__STRIP PLOT:__  
+Gene expression per gene:
+```{r fig.align = 'center'}
+(strPlot <- ggplot(tDat, aes(gExp, probeID, colour = gType)) +
+  geom_point())
+```
+
+This is a bit messy... Let's reorder probeID based on gExp and replot:
+```{r fig.align = 'center'}
+tDat <- within(tDat, probeID <- reorder(probeID, gExp))
+
+(strPlot <- ggplot(tDat, aes(gExp, probeID, colour = gType)) +
+   geom_point())
+```
+
+__BOX PLOT:__  
+Gene expression across all probes comparing gType:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(bxPlot <- ggplot(tDat, aes(gType, gExp)) +
+   geom_boxplot())
+```
+
+Gene expression per probeID comparing gType:
+```{r fig.align = 'center'}
+(bxPlot <- ggplot(tDat, aes(probeID, gExp, 
+                            fill = interaction(gType))) +
+   geom_boxplot() + 
+   theme()) 
+```
+
+__DENSITY PLOT:__  
+Gene expression across all 20 genes comparing gType:
+```{r fig.width = 5, fig.height = 5, fig.align = 'center'}
+(densPlot <- ggplot(tDat, aes(gExp, colour = gType)) +
+   stat_density(geom = "line", position = "identity"))
+```
+
+Gene expression per probeID comparing gType:
+```{r fig.align = 'center'}
+(densPlot <- ggplot(tDat, aes(gExp, colour = gType)) +
+  stat_density(geom = "line", position = "identity") +
+  facet_wrap(~ probeID))
+```
+
+Using ggplot visualisation tools alone, it appears that for the 20 probes that have been randomly chosen here, there is no significant difference between expression for wt and KO mice.
