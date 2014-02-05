@@ -294,7 +294,6 @@ pbinom(uppThresh, sizeTrial, probTrial) -
 
 CLT: central limit theorem. Let's use ggplot2 instead of lattice.
 ```{r}
-install.packages("ggplot2")
 library("ggplot2")
 ```
 
