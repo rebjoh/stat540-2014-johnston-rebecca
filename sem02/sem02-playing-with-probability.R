@@ -260,7 +260,6 @@ pbinom(uppThresh, sizeTrial, probTrial) -
 # CLT: central limit theorem
 
 # Let's use ggplot2
-install.packages("ggplot2")
 library("ggplot2")
 
 # Empirical distribution of sample means for various sample sizes
