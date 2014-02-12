@@ -1,0 +1,236 @@
+STAT540 Seminar 05: Fitting and interpreting linear models (low volume)
+---
+_Rebecca Johnston 05/02/2014_
+
+
+* <dim id="1a">[Load required packages and photoRec data](#1b)
+* <dim id="2a">[Function to prepare a dataset for given genes](#2b)
+* <dim id="3a">[Write a function to stripplot a mini-dataset](#3b)
+* <dim id="4a">[Do a two-sample t-test](#4b)
+* <dim id="5a">[Fit a linear model with a categorical covariate](#5b)
+* <dim id="6a">[Perform inference for a contrast](#6b)
+* <dim id="7a">[Fit a linear model with two categorical covariates](#7b)
+* <dim id="8a">[Ideas for further work](#8b)
+
+
+### <dim id="1b">[Load required packages and photoRec data](#1b)
+```{r}
+library("ggplot2") # for graphing
+library("reshape2") # for converting data from wide to tall format
+library("plyr") # for data aggregation tasks
+```
+
+Load gene expression dataset:
+```{r}
+prDat <- read.table("GSE4051_data.tsv")
+str(prDat, max.level = 0)
+```
+
+Load design matrix:
+```{r}
+prDes <- readRDS("GSE4051_design.rds")
+str(prDes)
+```
+
+
+### <dim id="2b">[Function to prepare a dataset for given genes](#2b)
+Write a function that takes any given affy probe ID and turns their associated values into a data frame.
+
+_METHOD: melting and merging._ Index prDat with chosen genes:
+```{r}
+luckyGenes <- c("1419655_at","1438815_at")
+luckyDf <- prDat[luckyGenes, ]
+```
+
+Reshape and bind with design matrix. Add rownames (probe ID) as a column for melt function first:
+```{r}
+luckyDf <- data.frame(gene = rownames(luckyDf), luckyDf) 
+luckyDf <- melt(luckyDf, id.vars = "gene", variable.name = "sidChar", 
+                value.name = "gExp")
+luckyDf <- merge(luckyDf, prDes, by = "sidChar")
+```
+
+Reorder using plyr function arrange:
+```{r}
+luckyDf <- arrange(luckyDf, devStage, gType)
+```
+
+We can now write the function where variable input is "luckyGenes":
+```{r}
+luckyGenes <- c("1419655_at","1438815_at")
+prepData <- function(x) {
+  luckyDf <- prDat[x, ]
+  luckyDf <- data.frame(gene = rownames(luckyDf), luckyDf) 
+  luckyDf <- melt(luckyDf, id.vars = "gene", variable.name = "sidChar", 
+                  value.name = "gExp")
+  luckyDf <- merge(luckyDf, prDes, by = "sidChar")
+  luckyDf <- arrange(luckyDf, devStage, gType)
+}
+jDat <- prepData(luckyGenes)
+str(jDat)
+```
+
+Plot data using ggplot:
+```{r}
+ggplot(jDat, aes(devStage, gExp, colour = gType, group = gType)) + 
+  geom_point() + facet_wrap(~ gene) +
+  stat_summary(fun.y = mean, geom = "line")
+```
+
+
+### <dim id="3b">[Write a function to stripplot a mini-dataset](#3b)
+You will probably make lots of these plots. Why not write a function for this?
+```{r}
+makeStripplot <- function(x) {
+  ggplot(x, aes(devStage, gExp, colour = gType, group = gType)) + 
+    geom_point() + facet_wrap(~ gene) +
+    stat_summary(fun.y = mean, geom = "line")
+}
+makeStripplot(jDat)
+```
+
+You can use both of your functions together and create a mini dataset and plot it all at once:
+```{r}
+makeStripplot(newDat <- prepData("1456341_a_at"))
+str(newDat)
+```
+
+
+### <dim id="4b">[Do a two-sample t-test](#4b)
+Let's test for a difference in expected gene expression for probeset "1456341\_a\_at" at developmental stage P2 v. 4 weeks post-natal (ignoring genotype, i.e. lump the wild types and knockouts together). Let's assume a common variance in the two groups.
+
+```{r}
+levels(newDat$devStage)
+```
+
+```{r}
+t.test(gExp ~ devStage, newDat, subset = devStage == "P2" | 
+         devStage == "4_weeks")
+```
+
+
+### <dim id="5b">[Fit a linear model with a categorical covariate](#5b)
+In other words, do "one-way ANOVA". Focus on probeset "1438786\_a\_at". Use function we already prepared to subset data and draw stripplot:
+```{r}
+makeStripplot(mDat <- prepData("1438786_a_at"))
+str(mDat)
+```
+
+Now call linear model using "lm" function:
+```{r}
+mDatlm <- lm(gExp ~ devStage, mDat, subset = gType == "wt")
+summary(mDatlm)
+```
+
+This result looks plausible: the intercept of 8.52 is close to the mean of E16 (the reference). And the values for the other devStages change accordingly (-/+ slope wrt devStageE16).
+
+
+### <dim id="6b">[Perform inference for a contrast](#6b)
+The "W" shape of the expression profile for "1438786\_a\_at" means that the expression values for developmental stages P2 and P10 are quite similar. We could formally test whether the P2 and P10 effects are equal or, equivalently, whether their difference is equal to zero. First extract the parameter estimates from the linear model you fit above. Hint: the coef() function will pull parameter estimates out of a wide array of fitted model objects in R.
+```{r}
+coef(mDatlm)
+```
+
+Now you need to construct the contrast matrix to form the difference between the P2 and P10 effects. Hint: it's OK for a matrix to have just one row.
+
+```{r}
+levels(mDat$devStage)
+```
+
+Contrast matrix for observed difference in sample mean for wt mice at P2 - P10:
+```{r}
+contMat <- matrix(c(0, 1, 0, -1, 0), nrow = 1)
+(obsDiff <- contMat %*% coef(mDatlm)) # %*% means matrix multiplication!
+```
+
+Let's check that this really is the observed difference in sample mean for the wild type mice, P2 v. P10:
+```{r}
+(sampMeans <- aggregate(gExp ~ devStage, mDat, FUN = mean,
+                        subset = gType == "wt"))
+with(sampMeans, gExp[devStage == "P2"] - gExp[devStage == "P10"])
+```
+
+Yes! Agrees with the observed difference we computed by multiplying our contrast matrix and the estimated parameters. If you don't get agreement, you have a problem ... probably with your contrast matrix.
+
+Now we need the (estimated) standard error for our contrast. The variance-covariance matrix of the parameters estimated in the original model can be obtained with vcov() and is equal to (X^(T)X)^(-1)(sigma hat)^2.
+```{r}
+vcov(mDatlm)
+```
+
+Let's check that this is really true. If we take the diagonal elements and take their square root, they should be exactly equal to the standard errors reported for out original model. Are they?
+```{r}
+summary(mDatlm)$coefficients[ , "Std. Error"]
+sqrt(diag(vcov(mDatlm)))
+```
+
+Returning to our test of the P2 v. P10 contrast, recall that the variance-covariance matrix of a contrast obtained as Calpha is C(X^(T)X)^(-1)C^(T)(sigma hat)^2.
+```{r}
+(estSe <- contMat %*% vcov(mDatlm) %*% t(contMat))
+```
+
+Now we form a test statistic as an observed effect divided by its estimated standard error:
+```{r}
+(testStat <- obsDiff/estSe)
+```
+
+Under the null hypothesis that the contrast equals zero, i.e. there is no true difference in mean for expression at P2 and P10 in wild type mice for this gene, the test statistic has a t distribution with n−p=20−5=15 degrees of freedom. We compute a two-sided p-value and we're done.
+```{r}
+2 * pt(abs(testStat), df = df.residual(mDatlm), lower.tail = FALSE)
+```
+
+Not surprisingly, this p-value is rather large and we conclude there is no difference.
+
+
+### <dim id="7b">[Fit a linear model with two categorical covariates](#7b)
+Let's focus on probeset "1448690_at". Use your functions to prepare the data and plot it.
+```{r}
+makeStripplot(oDat <- prepData("1448690_at"))
+str(oDat)
+```
+
+Fit a linear model with covariates gType and devStage and include their interactions. Include interactions = multiply categorical covariates:
+```{r}
+oFitBig <- lm(gExp ~ gType * devStage, oDat)
+round(summary(oFitBig)$coefficients, digits = 5)
+```
+
+Vet the results. Is the intercept plausible? How about the various effects? Do the ones with small p-values, e.g. meeting a conventional cut-off of 0.05, look 'real' to you?
+
+Yes, significant p-values for wtdevStageP6, P10 and 4_weeks seem real. As for the intercepts for the interaction of gType and devStage, not sure about this? Why are the estimate values positive? Now I understand (thank you Alastair!). This value represents the interaction effect, the observed average - expected average (intercept + KO effect + devStageP2 effect).
+
+Omit interactions = sum categorical covariates. No interaction assumes the lines must be parallel:
+```{r}
+oFitSml <- lm(gExp ~ gType + devStage, oDat)
+summary(oFitSml)$coefficients
+```
+
+Now let's determine if the interaction terms are truly necessary. From the plot, the case for interaction seems very weak. This can be assessed with an F test that essentially looks at the reduction in the sum of squared residuals due to using a larger, more complicated model and determines if it is "big enough" given the number of additional parameters used. Recall the anova() function can take two fitted models, one nested within the other, and perform this test. (anova() can also be used on a single model to assess significance of terms, but remember the problem with the standard anova() function and unbalanced data)
+```{r}
+anova(oFitSml, oFitBig)
+```
+
+With a p-value awfully close to one, we confirm that, no, there is no evidence for interaction in this particular case.
+
+If you'd like to get a more exciting result, take a look at probeset "1429225_at". Here are my plots, excerpts from the fitted model reports, and the F test for interaction:
+```{r}
+makeStripplot(pDat <- prepData("1429225_at"))
+```
+
+Big model, with interaction = Number of parameters: gType * devStage = 2 * 5 = 10 parameters
+```{r}
+pFitBig <- lm(gExp ~ gType * devStage, pDat)
+round(summary(pFitBig)$coefficient, digits = 5)
+```
+
+Small model, no interaction = Number of parameters: (gType - 1) + (devStage - 1) + 1 = 1 + 4 + 1 = 6 parameters
+```{r}
+pFitSml <- lm(gExp ~ gType + devStage, pDat)
+round(summary(pFitSml)$coefficient, digits = 5)
+anova(pFitSml, pFitBig)
+```
+
+Not surprisingly, the interaction here is highly statistically significant.
+
+
+### <dim id="8b">[Ideas for further work](#8b)
+For another day...
