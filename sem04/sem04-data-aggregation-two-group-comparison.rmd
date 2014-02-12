@@ -1,0 +1,315 @@
+STAT540 Seminar 04: Two-group comparisons and data aggregation
+---
+_Rebecca Johnston 29/01/2014_
+
+* <dim id="1a">[Load required libraries and read data](#1b)
+* <dim id="2a">[Two sample tests: one gene](#2b)
+* <dim id="3a">[Two sample tests: a handful of genes](#3b)
+* <dim id="4a">[The plyr package](#4b)
+* <dim id="5a">[Ideas for take-home work](#5b)
+
+### <dim id="1b">[Load required libraries and read data](#1b)
+```{r}
+library("ggplot2") # for graphing
+library(plyr) # for data aggreagation
+library("reshape2") # for reshaping data from wide to tall format
+```
+
+Load gene expression dataset:
+```{r}
+prDat <- read.table("GSE4051_data.tsv")
+str(prDat, max.level = 0)
+```
+
+Load design matrix:
+```{r}
+prDes <- readRDS("GSE4051_design.rds")
+str(prDes)
+```
+
+
+### <dim id="2b">[Two sample tests: one gene](#2b)
+Extract data for one gene, put in a data.frame with experimental info:
+```{r}
+set.seed(987)
+(theGene <- sample(1:nrow(prDat), 1))
+(pDat <- data.frame(prDes, gExp = unlist(prDat[theGene, ])))
+str(pDat)
+head(pDat)
+```
+
+Check data summary using aggregate function:
+```{r}
+aggregate(gExp ~ gType, pDat, FUN = mean)
+```
+
+Make a strip plot:
+```{r}
+ggplot(pDat, aes(gExp, gType)) +
+  geom_point()
+```
+
+Perform a two-sample t test comparing wild type to the Nrl knockouts:
+```{r}
+t.test(gExp ~ gType, pDat)
+```
+
+Save t test results by naming it:
+```{r}
+ttRes <- t.test(gExp ~ gType, pDat)
+str(ttRes)
+```
+
+Most useful components are test statistic and p-value:
+```{r}
+ttRes$statistic
+ttRes$p.value
+```
+
+Draw a different gene at random or pick one for biological interest and look up the Affy probe ID. Use the t test, with and without the common variance assumption, the Wilcoxon, and/or the Kolmogorov-Smirnov test to assess differential expression. Can you pull test statistics and/or p-values from the different approaches into an common object, like a readable table? Are you getting the same message from the various approaches?
+
+Choose probeID at random:
+```{r}
+set.seed(675)
+thatGene <- sample(1:nrow(prDat), 1)
+(pDat <- data.frame(prDes, gExp = unlist(prDat[thatGene, ])))
+aggregate(gExp ~ gType, pDat, FUN = mean)
+ggplot(pDat, aes(gExp, gType)) + geom_point()
+```
+
+__T test (t.test)__ by default, common variance assumption = FALSE:
+```{r}
+ttRes <- (t.test(gExp ~ gType, pDat, var.equal = FALSE))
+str(ttRes)
+ttResT <- (t.test(gExp ~ gType, pDat, var.equal = TRUE))
+str(ttResT)
+```
+
+Remember: Wilcoxon and Kolmogorov-Smirnov tests are non-parametric tests.  
+__Wilcoxon test (wilcox.test)__ compares two samples by ranking them:
+
+```{r}
+(wtRes <- wilcox.test(gExp ~ gType, data = pDat))
+str(wtRes)
+```
+
+Note there are identical values for gExp, therefore when ranking, ties exist. Hence the warning message... Not sure whether it is possible to suppress warnings within the function?
+
+__Kolmogorov-Smirnov (ks.test)__ quantifies the distance between empirical distribution functions of two samples. Must specify x vs. y here, i.e. gene expression values for wt vs. KO:
+```{r}
+(kstRes <- ks.test(pDat$gExp[pDat$gType == "wt"], 
+                   pDat$gExp[pDat$gType == "NrlKO"]))
+str(kstRes)
+```
+
+Combine results from different tests:
+```{r}
+combineRes <- function(a, b, c, d) {
+  method <- c(a$method, b$method, c$method, d$method)
+  testStat <- c(a$statistic, b$statistic, c$statistic, d$statistic)
+  pValue <- c(a$p.value, b$p.value, c$p.value, d$p.value)
+  data.frame(method, testStat, pValue)
+}
+
+(results <- combineRes(ttRes, ttResT, wtRes, kstRes))
+```
+
+No matter which statistical test we choose, we obtain different numbers, but reach same conclusion: the means of wt and KO for expression of this gene are not equal. 
+  
+N.B. wilcox.test and ks.test could not compute exact p-values. However, I'm worried that pValue from the ks.test was slightly higher than the other tests. Whether this is to be expected or I have not specified the test correctly I'm not sure?
+
+
+### <dim id="3b">[Two sample tests: a handful of genes](#3b)
+Let's grab the data from 6 genes: 3 are interesting ('hits'), 3 are not. Reshape the data to be tall and skinny, which is generally a good policy and allows us to learn more about data aggregation.
+
+```{r}
+keepGenes <- c("1431708_a_at", "1424336_at", "1454696_at",
+               "1416119_at", "1432141_x_at", "1429226_at" )
+miniDat <- subset(prDat, rownames(prDat) %in% keepGenes)
+miniDat <- data.frame(gExp = as.vector(t(as.matrix(miniDat))),
+                      gene = factor(rep(rownames(miniDat), each = ncol(miniDat)),
+                                    levels = keepGenes))
+```
+
+Sample ID in same order within design matrix and gene expression data. Therefore can put data frames together:
+```{r}
+miniDat <- suppressWarnings(data.frame(prDes, miniDat))
+str(miniDat)
+```
+
+Plot strip plot:
+```{r}
+ggplot(miniDat, aes(gExp, gType, colour = gType)) +
+  geom_point(alpha = 0.3) +
+  facet_wrap(~ gene, scale = "free_x") # x scale independent per probe
+```
+
+Use data aggregation techniques to conduct some two group comparisons for each of these 6 genes. Compare gene expression by genotype across all 6 genes:
+
+```{r}
+t.test(gExp ~ gType, miniDat)
+```
+
+Conceptually, we want to make a sub-data.frame for each gene and provide in the place of someDat in a t test call like above. Sometimes that is a useful first step, when building up a data aggregation task.
+
+Subset miniDat to one gene, the first value in keepGenes:
+```{r}
+someDat <- droplevels(subset(miniDat, gene == keepGenes[1]))
+t.test(gExp ~ gType, someDat)
+```
+
+But how do we scale this up to all 6 genes? Welcome pylr...
+
+
+### <dim id="4b">[The plyr package](#4b)
+Since our input, miniDat, is a data.frame, we will use functions that start with d. What do we want to get back, if anything? If we are happy to watch the t test results fly by on the screen, we can use d_ply() with .print =TRUE. But we can also store results into a list using dlply():
+
+```{r}
+ttRes <- dlply(miniDat, ~ gene, function(x) t.test(gExp ~ gType, x))
+names(ttRes)
+ttRes[["1454696_at"]]
+```
+
+If we knew in advance that we only wanted, say, the test statistic and the p-value, here's how we go after that directly via ddply():
+```{r}
+(ttRes <- ddply(miniDat, ~ gene, function(z) {
+  zz <- t.test(gExp ~ gType, z)
+  # round results to 4 digits
+  round(c(tStat = zz$statistic, pVal = zz$p.value), 4)
+  }))
+```
+
+
+### <dim id="5b">[Ideas for take-home work](#5b)
+In our last example, can you edit the inner function to use the Wilcoxon or KS test? Or maybe do the t test, the Wilcoxon, and the KS test and return all 3 p-values?
+
+Make function separate:
+```{r}
+multiTest <- function(x) {
+  tt <- t.test(gExp ~gType, x)
+  wt <- wilcox.test(gExp ~gType, x)
+  ks <- ks.test(x$gExp[x$gType == "wt"], x$gExp[x$gType == "NrlKO"])
+  round(c(tStat = tt$p.val, wStat = wt$p.val, kStat = ks$p.val), 6)
+}
+```
+
+Call function within ddply:
+```{r}
+(multitRes <- suppressWarnings(ddply(miniDat, ~ gene, multiTest)))
+```
+
+Scale up to 100 genes:
+```{r}
+set.seed(123)
+lotsGenes <- sample(1:nrow(prDat), 100)
+head(lotsGenes)
+lotsDat <- prDat[lotsGenes, ]
+str(lotsDat, max.level = 0)
+lotsDat <- data.frame(gExp = as.vector(t(as.matrix(lotsDat))),
+                      gene = factor(rep(rownames(lotsDat), each = ncol(lotsDat)),
+                                    levels = rownames(lotsDat)))
+str(lotsDat)
+head(lotsDat)
+lotsDat <- suppressWarnings(data.frame(prDes, lotsDat))
+multiRes <- suppressWarnings(ddply(lotsDat, ~ gene, multiTest))
+head(multiRes)
+tail(multiRes)
+summary(lm(multiRes$tStat ~ multiRes$wStat))
+```
+
+Scatterplot various two-group tests against each other:  
+  
+__t.test vs. wilcox.test__  
+Perform lm and obtain r-squared value:
+```{r}
+fit <- summary(lm(multiRes$tStat ~ multiRes$wStat))
+fit$r.squared
+```
+
+Plot together with r-squared value:
+```{r}
+ggplot(multiRes, aes(tStat, wStat)) +
+  geom_point() +
+  stat_smooth(method = "lm", se = FALSE, colour = "black") +
+  geom_abline(intercept = 0, aes(colour = "red")) +
+  ggtitle(paste("P values from t.test vs. wilcox.test\nfor 100 random genes from prDat dataset\nr-squared =", 
+                round(fit$r.squared, digits = 4)))
+```
+
+__t.test vs. ks.test__
+```{r}
+fit <- summary(lm(multiRes$tStat ~ multiRes$kStat))
+fit$r.squared
+```
+
+```{r}
+ggplot(multiRes, aes(tStat, kStat)) +
+  geom_point() +
+  stat_smooth(method = "lm", se = FALSE, colour = "black") +
+  geom_abline(intercept = 0, aes(colour = "red")) +
+  ggtitle(paste("P values from t.test vs. ks.test\nfor 100 random genes from prDat dataset\nr-squared =", 
+                round(fit$r.squared, digits = 4)))
+```
+
+__wilcox.test vs. ks.test__
+```{r}
+fit <- summary(lm(multiRes$wStat ~ multiRes$kStat))
+fit$r.squared
+```
+
+```{r}
+ggplot(multiRes, aes(wStat, kStat)) +
+  geom_point() +
+  stat_smooth(method = "lm", se = FALSE, colour = "black") +
+  geom_abline(intercept = 0, aes(colour = "red")) +
+  ggtitle(paste("P values from wilcox.test vs. ks.test\nfor 100 random genes from prDat dataset\nr-squared =", 
+          round(fit$r.squared, digits = 4)))
+```
+
+Therefore, t.test and wilcox.test have the most concordance in p values, whereas the t.test and ks.test have the least concordance in p values.  
+  
+Convert your numeric matrix of p-values into a matrix of TRUE/FALSE or zeros and ones by hard-threshholding, e.g. at the conventional 0.05 level. Use apply() or a function from plyr to make some interesting row or column summaries. How many genes are significant according to the different tests? For each gene, how many of the tests return a significant p-value? How many genes are "hits" by all 3 methods, by exactly 2, by exactly 1 and by none?
+
+Start with multiRes dataset:
+```{r}
+head(multiRes)
+```
+
+Convert data frame into matrix by removing gene names:
+```{r}
+multiResMat <- multiRes[ , c("tStat", "wStat", "kStat")]
+multiResMat <- multiResMat < 0.05
+head(multiResMat)
+```
+
+Use apply to make summaries for each test. Summary by test (column):
+```{r}
+apply(multiResMat, 2, sum)
+```
+
+Summary by gene (row):
+```{r}
+apply(multiResMat, 1, sum)
+```
+
+Now make summaries using plyr instead. First use reshape2 melt function to convert data into tall format:
+```{r}
+multiResM <- melt(multiRes, id.var = "gene", variable.name = "method", 
+                  value.name = "pVal")
+str(multiResM)
+head(multiResM)
+```
+
+Apply threshold as a function within ddply:
+```{r}
+ddply(multiResM, ~ method, summarize, pValAboveSig = sum(pVal < 0.05))
+test <- ddply(multiResM, ~ gene, summarize, pValAboveSig = sum(pVal < 0.05))
+head(test)
+```
+
+Can we summarize the above even further? Number of genes that had 0, 1, 2 and 3 p values < 0.05?
+```{r}
+ddply(test, ~ pValAboveSig, summarize, geneNumber = table(pValAboveSig))
+```
+
+How can we get this summary straight from multiResM? Without making test?
