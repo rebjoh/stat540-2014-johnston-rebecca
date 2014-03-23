@@ -1,0 +1,267 @@
+STAT540 Seminar 07: RNA-seq Differential Expression Analysis
+---
+_Rebecca Johnston 26/02/2014_
+
+* <dim id="1a">[Load required packages and RNA-seq data](#1b)
+* <dim id="2a">[edgeR](#2b)
+* <dim id="3a">[DESeq](#3b)
+* <dim id="4a">[Voom & limma](#4b)
+* <dim id="5a">[Take Home Problem](#5b)
+
+In this seminar we will use a table of read counts for genomic features, such as genes or exons, derived from RNA-seq alignment BAM file to perform differential expression analysis. We will use `edgeR`, `DESeq` and `voom + limma` packages for this purpose. We will use the data from [this publication](http://www.ncbi.nlm.nih.gov/pubmed?term=21455293). The mRNA from 21 mice belonging to two different strains have been sequenced; the count table lists the number of reads aligned to the annotated mouse genes in the Ensembl database. Our goal is to identify those genes that are differentially expressed between the two strains.
+
+
+### <dim id="1b">[Load required packages and RNA-seq data](#1b)
+
+```{r message=FALSE, warning=FALSE}
+library(edgeR) # Diff expr analysis of RNA-seq data
+library(DESeq) # Diff expr analysis of RNA-seq data
+library(limma) # Fit linear models
+```
+
+```{r}
+dat <- read.table("bottomly_count_table.tsv", header = TRUE, row.names = 1)
+str(dat, max.level = 0)
+des <- read.table("bottomly_phenodata.tsv", header = TRUE, row.names = 1)
+str(des)
+```
+
+```{r include=FALSE}
+head(dat)
+tail(dat)
+des
+all(rownames(des) == colnames(dat))
+```
+
+
+### <dim id="2b">[edgeR](#2b)
+
+`edgeR` implements statistical methods based on the negative binomial distribution for count data. The first version of `edgeR` implemented exact statistical methods for comparison of multiple groups but is only applicable to experiments with one factor. This sometimes is referred to as classic `edgeR`. An addition to the classic version is an implementation of generalized linear models (glms) used for analysis of multifactor experiments where the response variables might not follow normal distribution. This sometimes is referred to as glm `edgeR`. Similar to `limma`, both versions of `edgeR` use empirical Bayes methods to estimate gene-specific variation. The classic `edgeR` uses quantile-adjusted conditional maximum likelihood (qCML) to estimate the disperison while the glm `edgeR` uses Cox-Reid profile-adjusted likelihood (CR) for dispersion estimation.
+
+`edgeR` takes in as an argument a table of integer counts, with rows corresponding to genes and columns to samples.
+
+GLM `edgeR`: GLM approach allows for comparison of multiple groups and/or factor levels. A design matrix can be created in the same way done for `limma`. Similarly, contrasts matrices can be used to make comparisons. Most of the glm functions have similar names to the classic version with an addition of 'glm'.
+
+The first step is to create a 'group' object describing which group each sample belongs to:
+```{r}
+with(des, table(strain))
+group <- factor(c(rep("1", 10), rep("2", 11)))
+group
+```
+
+`DGEList` produces an object of type DGEList with can be manipulated in a similar way to any other list object in R:
+```{r tidy=FALSE}
+dgeGlm <- DGEList(counts = dat, group = group)
+str(dgeGlm)
+names(dgeGlm)
+dgeGlm[["samples"]]
+nrow(dgeGlm[[1]])
+ncol(dgeGlm[[1]])
+```
+
+This DGELIst object has two components: one is a matrix called 'counts' storing the count data, the other is a data.frame called 'samples' storing information for samples. Optionally, you can also provide an annotation file for the genes which will be stored in the data.frame 'genes'. The data.frame 'samples', contains the samples IDs, group information and library sizes (or equally library sequence depth). You can either supply the library size info or it can be calculated from the sums of counts in each column.
+
+```{r tidy = FALSE}
+design <- model.matrix(~group)
+design
+dgeGlmComDisp <- estimateGLMCommonDisp(dgeGlm, design, verbose = TRUE)
+dgeGlmTrendDisp <- estimateGLMTrendedDisp(dgeGlmComDisp, design)
+dgeGlmTagDisp <- estimateGLMTagwiseDisp(dgeGlmTrendDisp, design)
+
+# plot the tagwise dispersion against log2-CPM (counts per million)
+plotBCV(dgeGlmTagDisp)
+# GLM fit
+fit <- glmFit(dgeGlmTagDisp, design)
+
+# Coefficients
+colnames(coef(fit))
+lrt <- glmLRT(fit, coef = 2)
+
+# topTags is analogous to topTable?
+topTags(lrt)
+ttGlm <- topTags(lrt, n = Inf)
+class(ttGlm)
+nrow(ttGlm$table[ttGlm$table$FDR < 0.01, ])
+hits <- rownames(ttGlm$table[ttGlm$table$FDR < 1e-50, ])
+cpm(dgeGlmTagDisp)[hits, ]
+summary(deGlm <- decideTestsDGE(lrt, p = 0.05, adjust = "BH"))
+```
+
+There are `r summary(deGlm)[1, 1]` genes that are under-expressed in group 2 (DBA/2J) compared to group 1 (C57BL/6J), `r summary(deGlm)[2, 1]` genes show no differences in expression, while `r summary(deGlm)[3, 1]` genes are over-expressed.
+
+```{r}
+# plotting the tagwise log fold changes against log-cpm
+tagsGlm <- rownames(dgeGlmTagDisp)[as.logical(deGlm)]
+plotSmear(lrt, de.tags = tagsGlm)
+abline(h = c(-2, 2), col = "blue")
+```
+
+
+### Mini exercise: 
+Redo the above analysis but first filter the data and remove any gene that has: 1. count equal to zero across all samples 2. count equal to zero in at least one sample in each genotype group.
+
+*1. Filter = Count equal to zero across all samples*  
+
+Trial: Since the `head(dat)` contains a row with sum equal to zero, use this mini set of rows as a trial.
+
+```{r}
+(miniDat <- head(dat))
+# Keep the rows where rowSums != 0
+(miniDat <- miniDat[rowSums(miniDat)!= 0, ])
+```
+It works! So let's apply filter 1 to `dat`:
+
+```{r}
+datFilt1 <- dat[rowSums(dat)!= 0, ]
+dim(datFilt1)
+nrow(dat) - nrow(datFilt1)
+```
+Therefore `r nrow(dat) - nrow(datFilt1)` genes were removed using the filter, so we are left with `r nrow(datFilt1)` genes.
+
+Let's continue with egdeR analysis using the same group and design:
+```{r}
+dgeGlmFilt1 <- DGEList(counts = datFilt1, group = group)
+```
+
+```{r include=FALSE}
+str(dgeGlmFilt1)
+names(dgeGlmFilt1)
+dgeGlmFilt1[["samples"]]
+nrow(dgeGlmFilt1[[1]])
+ncol(dgeGlmFilt1[[1]])
+```
+
+```{r tidy = FALSE}
+dgeGlmComDispFilt1 <- estimateGLMCommonDisp(dgeGlmFilt1, design, verbose = TRUE)
+dgeGlmTrendDispFilt1 <- estimateGLMTrendedDisp(dgeGlmComDispFilt1, design)
+dgeGlmTagDispFilt1 <- estimateGLMTagwiseDisp(dgeGlmTrendDispFilt1, design)
+
+plotBCV(dgeGlmTagDispFilt1)
+fitFilt1 <- glmFit(dgeGlmTagDispFilt1, design)
+colnames(coef(fitFilt1))
+lrtFilt1 <- glmLRT(fitFilt1, coef = 2)
+topTags(lrtFilt1)
+ttGlmFilt1 <- topTags(lrtFilt1, n = Inf)
+class(ttGlmFilt1)
+nrow(ttGlmFilt1$table[ttGlm$table$FDR < 0.01, ])
+hitsFilt1 <- rownames(ttGlmFilt1$table[ttGlmFilt1$table$FDR < 1e-50, ])
+cpm(dgeGlmTagDispFilt1)[hitsFilt1, ]
+(summaryFilt1 <- summary(deGlmFilt1 <- decideTestsDGE(lrtFilt1, p = 0.05, adjust = "BH")))
+```
+After applying filter 1, there are `r summaryFilt1[1, 1]` genes that are under-expressed in group 2 (DBA/2J) compared to group 1 (C57BL/6J), `r summaryFilt1[2, 1]` genes show no differences in expression, while `r summaryFilt1[3, 1]` genes are over-expressed. Therefore we obtain more hits with filter 1 than without it!
+
+```{r}
+# plotting the tagwise log fold changes against log-cpm
+tagsGlmFilt1 <- rownames(dgeGlmTagDispFilt1)[as.logical(deGlmFilt1)]
+plotSmear(lrtFilt1, de.tags = tagsGlmFilt1)
+abline(h = c(-2, 2), col = "blue")
+```
+
+
+*2. Filter = Count equal to zero in at least one sample in each genotype group*  
+
+Again, I will first test the filter on a subset of `dat`. I will use `head(dat)` as it contains rows with sum equal to zero, and rows where 1 or more samples have counts equal to zero.
+
+Therefore, if 1 or more samples has zero reads, and we multiply all reads from each sample together (row multiplication), we will obtain 0 and can remove these rows. Not sure what function to use for this, apply?
+
+```{r}
+(miniDat <- head(dat))
+# Use apply function with "MARGIN = 1" to indicate by row, "prod" = product
+apply(miniDat, 1, prod)
+# Use this together with indexing:
+miniDat[apply(miniDat, 1, prod)!= 0, ]
+```
+It works! So let's apply filter 2 to `dat`:
+
+```{r}
+datFilt2 <- dat[apply(dat, 1, prod)!= 0, ]
+dim(datFilt2)
+nrow(dat) - nrow(datFilt2)
+```
+Therefore `r nrow(dat) - nrow(datFilt2)` genes were removed using the filter, and we are left with `r nrow(datFilt2)` genes.
+
+Let's continue with egdeR analysis using the same group and design:
+```{r}
+dgeGlmFilt2 <- DGEList(counts = datFilt2, group = group)
+```
+
+```{r include=FALSE}
+str(dgeGlmFilt2)
+names(dgeGlmFilt2)
+dgeGlmFilt2[["samples"]]
+nrow(dgeGlmFilt2[[1]])
+ncol(dgeGlmFilt2[[1]])
+```
+
+```{r tidy = FALSE}
+dgeGlmComDispFilt2 <- estimateGLMCommonDisp(dgeGlmFilt2, design, verbose = TRUE)
+dgeGlmTrendDispFilt2 <- estimateGLMTrendedDisp(dgeGlmComDispFilt2, design)
+dgeGlmTagDispFilt2 <- estimateGLMTagwiseDisp(dgeGlmTrendDispFilt2, design)
+plotBCV(dgeGlmTagDispFilt2)
+fitFilt2 <- glmFit(dgeGlmTagDispFilt2, design)
+colnames(coef(fitFilt2))
+lrtFilt2 <- glmLRT(fitFilt2, coef = 2)
+topTags(lrtFilt2)
+ttGlmFilt2 <- topTags(lrtFilt2, n = Inf)
+class(ttGlmFilt2)
+nrow(ttGlmFilt2$table[ttGlm$table$FDR < 0.01, ])
+hitsFilt2 <- rownames(ttGlmFilt2$table[ttGlmFilt2$table$FDR < 1e-50, ])
+cpm(dgeGlmTagDispFilt2)[hitsFilt2, ]
+(summaryFilt2 <- summary(deGlmFilt2 <- decideTestsDGE(lrtFilt2, p = 0.05, adjust = "BH")))
+```
+After applying filter 2, there are `r summaryFilt2[1, 1]` genes that are under-expressed in group 2 (DBA/2J) compared to group 1 (C57BL/6J), `r summaryFilt2[2, 1]` genes show no differences in expression, while `r summaryFilt2[3, 1]` genes are over-expressed.
+
+```{r}
+# plotting the tagwise log fold changes against log-cpm
+tagsGlmFilt2 <- rownames(dgeGlmTagDispFilt2)[as.logical(deGlmFilt2)]
+plotSmear(lrtFilt2, de.tags = tagsGlmFilt2)
+abline(h = c(-2, 2), col = "blue")
+```
+
+
+
+### <dim id="3b">[DESeq](#3b)
+
+We will try the differential expression analysis of the same dataset using `DESeq`.
+
+```{r}
+# read in same count table data and grouping information
+deSeqDat <- newCountDataSet(dat, group)
+head(counts(deSeqDat))
+```
+
+Next, we estimate the size factors to account for differences in library coverage and estimate the variance:
+```{r}
+deSeqDat <- estimateSizeFactors(deSeqDat)
+sizeFactors(deSeqDat)
+deSeqDat <- estimateDispersions(deSeqDat)
+# plotting the estimated dispersions against the mean normalized counts
+plotDispEsts(deSeqDat)
+```
+
+Next, we will fit the model and examine the results:
+```{r}
+# This will take ~ 1 min
+results <- nbinomTest(deSeqDat, levels(group)[1], levels(group)[2])
+str(results)
+plotMA(results)
+```
+
+
+### <dim id="4b">[Voom & limma](#4b)
+
+```{r}
+normFactor <- calcNormFactors(dat)
+datVoom <- voom(dat, design, plot = TRUE, lib.size = colSums(dat) * normFactor)
+# datVoom
+fit <- lmFit(datVoom, design)
+fit <- eBayes(fit)
+topTable(fit)
+```
+
+
+### <dim id="5b">[Take Home Problem](#5b)
+
+Choose a specific threshold for the adjusted p value, find the genes identified as differentially expressed using each of `edgeR`, `DESeq` and `voom + limma`. Compare the number of genes in these 3 lists, and draw a venn digram demonstrating the overlap (if any!).
+
+For another day :)
