@@ -324,7 +324,7 @@ summary(wtResCont)
 # head(wtResCont)
 ```
 
-Now find hits where contrasts between P2 vs E16 and P6 vs P2 are not equal to 0:
+Find hits where contrasts between P2 vs E16 and P6 vs P2 are not equal to 0:
 ```{r fig.align='center', fig.height=9, fig.width=10}
 hits7 <- rownames(prDat)[which(
   wtResCont[, "P2VsE16"] < 0 &

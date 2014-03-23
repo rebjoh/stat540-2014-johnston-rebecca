@@ -1007,7 +1007,7 @@ summary(wtResCont)
 <pre><code class="r"># head(wtResCont)
 </code></pre>
 
-<p>Now find hits where contrasts between P2 vs E16 and P6 vs P2 are not equal to 0:</p>
+<p>Find hits where contrasts between P2 vs E16 and P6 vs P2 are not equal to 0:</p>
 
 <pre><code class="r">hits7 &lt;- rownames(prDat)[which(wtResCont[, &quot;P2VsE16&quot;] &lt; 0 &amp; wtResCont[, &quot;P6VsP2&quot;] &lt; 
     0 &amp; wtResCont[, &quot;P10VsP6&quot;] == 0 &amp; wtResCont[, &quot;fourweeksVsP10&quot;] == 0 &amp; wtResCont[, 
