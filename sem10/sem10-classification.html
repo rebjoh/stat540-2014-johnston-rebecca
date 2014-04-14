@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>STAT540 Seminar 10: Supervised learning, classification, cross validation, variable selection</title>
+
+<!-- Styles for R syntax highlighter -->
+<style type="text/css">
+   pre .operator,
+   pre .paren {
+     color: rgb(104, 118, 135)
+   }
+
+   pre .literal {
+     color: #990073
+   }
+
+   pre .number {
+     color: #099;
+   }
+
+   pre .comment {
+     color: #998;
+     font-style: italic
+   }
+
+   pre .keyword {
+     color: #900;
+     font-weight: bold
+   }
+
+   pre .identifier {
+     color: rgb(0, 0, 0);
+   }
+
+   pre .string {
+     color: #d14;
+   }
+</style>
+
+<!-- R syntax highlighter -->
+<script type="text/javascript">
+var hljs=new function(){function m(p){return p.replace(/&/gm,"&amp;").replace(/</gm,"&lt;")}function f(r,q,p){return RegExp(q,"m"+(r.cI?"i":"")+(p?"g":""))}function b(r){for(var p=0;p<r.childNodes.length;p++){var q=r.childNodes[p];if(q.nodeName=="CODE"){return q}if(!(q.nodeType==3&&q.nodeValue.match(/\s+/))){break}}}function h(t,s){var p="";for(var r=0;r<t.childNodes.length;r++){if(t.childNodes[r].nodeType==3){var q=t.childNodes[r].nodeValue;if(s){q=q.replace(/\n/g,"")}p+=q}else{if(t.childNodes[r].nodeName=="BR"){p+="\n"}else{p+=h(t.childNodes[r])}}}if(/MSIE [678]/.test(navigator.userAgent)){p=p.replace(/\r/g,"\n")}return p}function a(s){var r=s.className.split(/\s+/);r=r.concat(s.parentNode.className.split(/\s+/));for(var q=0;q<r.length;q++){var p=r[q].replace(/^language-/,"");if(e[p]){return p}}}function c(q){var p=[];(function(s,t){for(var r=0;r<s.childNodes.length;r++){if(s.childNodes[r].nodeType==3){t+=s.childNodes[r].nodeValue.length}else{if(s.childNodes[r].nodeName=="BR"){t+=1}else{if(s.childNodes[r].nodeType==1){p.push({event:"start",offset:t,node:s.childNodes[r]});t=arguments.callee(s.childNodes[r],t);p.push({event:"stop",offset:t,node:s.childNodes[r]})}}}}return t})(q,0);return p}function k(y,w,x){var q=0;var z="";var s=[];function u(){if(y.length&&w.length){if(y[0].offset!=w[0].offset){return(y[0].offset<w[0].offset)?y:w}else{return w[0].event=="start"?y:w}}else{return y.length?y:w}}function t(D){var A="<"+D.nodeName.toLowerCase();for(var B=0;B<D.attributes.length;B++){var C=D.attributes[B];A+=" "+C.nodeName.toLowerCase();if(C.value!==undefined&&C.value!==false&&C.value!==null){A+='="'+m(C.value)+'"'}}return A+">"}while(y.length||w.length){var v=u().splice(0,1)[0];z+=m(x.substr(q,v.offset-q));q=v.offset;if(v.event=="start"){z+=t(v.node);s.push(v.node)}else{if(v.event=="stop"){var p,r=s.length;do{r--;p=s[r];z+=("</"+p.nodeName.toLowerCase()+">")}while(p!=v.node);s.splice(r,1);while(r<s.length){z+=t(s[r]);r++}}}}return z+m(x.substr(q))}function j(){function q(x,y,v){if(x.compiled){return}var u;var s=[];if(x.k){x.lR=f(y,x.l||hljs.IR,true);for(var w in x.k){if(!x.k.hasOwnProperty(w)){continue}if(x.k[w] instanceof Object){u=x.k[w]}else{u=x.k;w="keyword"}for(var r in u){if(!u.hasOwnProperty(r)){continue}x.k[r]=[w,u[r]];s.push(r)}}}if(!v){if(x.bWK){x.b="\\b("+s.join("|")+")\\s"}x.bR=f(y,x.b?x.b:"\\B|\\b");if(!x.e&&!x.eW){x.e="\\B|\\b"}if(x.e){x.eR=f(y,x.e)}}if(x.i){x.iR=f(y,x.i)}if(x.r===undefined){x.r=1}if(!x.c){x.c=[]}x.compiled=true;for(var t=0;t<x.c.length;t++){if(x.c[t]=="self"){x.c[t]=x}q(x.c[t],y,false)}if(x.starts){q(x.starts,y,false)}}for(var p in e){if(!e.hasOwnProperty(p)){continue}q(e[p].dM,e[p],true)}}function d(B,C){if(!j.called){j();j.called=true}function q(r,M){for(var L=0;L<M.c.length;L++){if((M.c[L].bR.exec(r)||[null])[0]==r){return M.c[L]}}}function v(L,r){if(D[L].e&&D[L].eR.test(r)){return 1}if(D[L].eW){var M=v(L-1,r);return M?M+1:0}return 0}function w(r,L){return L.i&&L.iR.test(r)}function K(N,O){var M=[];for(var L=0;L<N.c.length;L++){M.push(N.c[L].b)}var r=D.length-1;do{if(D[r].e){M.push(D[r].e)}r--}while(D[r+1].eW);if(N.i){M.push(N.i)}return f(O,M.join("|"),true)}function p(M,L){var N=D[D.length-1];if(!N.t){N.t=K(N,E)}N.t.lastIndex=L;var r=N.t.exec(M);return r?[M.substr(L,r.index-L),r[0],false]:[M.substr(L),"",true]}function z(N,r){var L=E.cI?r[0].toLowerCase():r[0];var M=N.k[L];if(M&&M instanceof Array){return M}return false}function F(L,P){L=m(L);if(!P.k){return L}var r="";var O=0;P.lR.lastIndex=0;var M=P.lR.exec(L);while(M){r+=L.substr(O,M.index-O);var N=z(P,M);if(N){x+=N[1];r+='<span class="'+N[0]+'">'+M[0]+"</span>"}else{r+=M[0]}O=P.lR.lastIndex;M=P.lR.exec(L)}return r+L.substr(O,L.length-O)}function J(L,M){if(M.sL&&e[M.sL]){var r=d(M.sL,L);x+=r.keyword_count;return r.value}else{return F(L,M)}}function I(M,r){var L=M.cN?'<span class="'+M.cN+'">':"";if(M.rB){y+=L;M.buffer=""}else{if(M.eB){y+=m(r)+L;M.buffer=""}else{y+=L;M.buffer=r}}D.push(M);A+=M.r}function G(N,M,Q){var R=D[D.length-1];if(Q){y+=J(R.buffer+N,R);return false}var P=q(M,R);if(P){y+=J(R.buffer+N,R);I(P,M);return P.rB}var L=v(D.length-1,M);if(L){var O=R.cN?"</span>":"";if(R.rE){y+=J(R.buffer+N,R)+O}else{if(R.eE){y+=J(R.buffer+N,R)+O+m(M)}else{y+=J(R.buffer+N+M,R)+O}}while(L>1){O=D[D.length-2].cN?"</span>":"";y+=O;L--;D.length--}var r=D[D.length-1];D.length--;D[D.length-1].buffer="";if(r.starts){I(r.starts,"")}return R.rE}if(w(M,R)){throw"Illegal"}}var E=e[B];var D=[E.dM];var A=0;var x=0;var y="";try{var s,u=0;E.dM.buffer="";do{s=p(C,u);var t=G(s[0],s[1],s[2]);u+=s[0].length;if(!t){u+=s[1].length}}while(!s[2]);if(D.length>1){throw"Illegal"}return{r:A,keyword_count:x,value:y}}catch(H){if(H=="Illegal"){return{r:0,keyword_count:0,value:m(C)}}else{throw H}}}function g(t){var p={keyword_count:0,r:0,value:m(t)};var r=p;for(var q in e){if(!e.hasOwnProperty(q)){continue}var s=d(q,t);s.language=q;if(s.keyword_count+s.r>r.keyword_count+r.r){r=s}if(s.keyword_count+s.r>p.keyword_count+p.r){r=p;p=s}}if(r.language){p.second_best=r}return p}function i(r,q,p){if(q){r=r.replace(/^((<[^>]+>|\t)+)/gm,function(t,w,v,u){return w.replace(/\t/g,q)})}if(p){r=r.replace(/\n/g,"<br>")}return r}function n(t,w,r){var x=h(t,r);var v=a(t);var y,s;if(v){y=d(v,x)}else{return}var q=c(t);if(q.length){s=document.createElement("pre");s.innerHTML=y.value;y.value=k(q,c(s),x)}y.value=i(y.value,w,r);var u=t.className;if(!u.match("(\\s|^)(language-)?"+v+"(\\s|$)")){u=u?(u+" "+v):v}if(/MSIE [678]/.test(navigator.userAgent)&&t.tagName=="CODE"&&t.parentNode.tagName=="PRE"){s=t.parentNode;var p=document.createElement("div");p.innerHTML="<pre><code>"+y.value+"</code></pre>";t=p.firstChild.firstChild;p.firstChild.cN=s.cN;s.parentNode.replaceChild(p.firstChild,s)}else{t.innerHTML=y.value}t.className=u;t.result={language:v,kw:y.keyword_count,re:y.r};if(y.second_best){t.second_best={language:y.second_best.language,kw:y.second_best.keyword_count,re:y.second_best.r}}}function o(){if(o.called){return}o.called=true;var r=document.getElementsByTagName("pre");for(var p=0;p<r.length;p++){var q=b(r[p]);if(q){n(q,hljs.tabReplace)}}}function l(){if(window.addEventListener){window.addEventListener("DOMContentLoaded",o,false);window.addEventListener("load",o,false)}else{if(window.attachEvent){window.attachEvent("onload",o)}else{window.onload=o}}}var e={};this.LANGUAGES=e;this.highlight=d;this.highlightAuto=g;this.fixMarkup=i;this.highlightBlock=n;this.initHighlighting=o;this.initHighlightingOnLoad=l;this.IR="[a-zA-Z][a-zA-Z0-9_]*";this.UIR="[a-zA-Z_][a-zA-Z0-9_]*";this.NR="\\b\\d+(\\.\\d+)?";this.CNR="\\b(0[xX][a-fA-F0-9]+|(\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)";this.BNR="\\b(0b[01]+)";this.RSR="!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|\\.|-|-=|/|/=|:|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~";this.ER="(?![\\s\\S])";this.BE={b:"\\\\.",r:0};this.ASM={cN:"string",b:"'",e:"'",i:"\\n",c:[this.BE],r:0};this.QSM={cN:"string",b:'"',e:'"',i:"\\n",c:[this.BE],r:0};this.CLCM={cN:"comment",b:"//",e:"$"};this.CBLCLM={cN:"comment",b:"/\\*",e:"\\*/"};this.HCM={cN:"comment",b:"#",e:"$"};this.NM={cN:"number",b:this.NR,r:0};this.CNM={cN:"number",b:this.CNR,r:0};this.BNM={cN:"number",b:this.BNR,r:0};this.inherit=function(r,s){var p={};for(var q in r){p[q]=r[q]}if(s){for(var q in s){p[q]=s[q]}}return p}}();hljs.LANGUAGES.cpp=function(){var a={keyword:{"false":1,"int":1,"float":1,"while":1,"private":1,"char":1,"catch":1,"export":1,virtual:1,operator:2,sizeof:2,dynamic_cast:2,typedef:2,const_cast:2,"const":1,struct:1,"for":1,static_cast:2,union:1,namespace:1,unsigned:1,"long":1,"throw":1,"volatile":2,"static":1,"protected":1,bool:1,template:1,mutable:1,"if":1,"public":1,friend:2,"do":1,"return":1,"goto":1,auto:1,"void":2,"enum":1,"else":1,"break":1,"new":1,extern:1,using:1,"true":1,"class":1,asm:1,"case":1,typeid:1,"short":1,reinterpret_cast:2,"default":1,"double":1,register:1,explicit:1,signed:1,typename:1,"try":1,"this":1,"switch":1,"continue":1,wchar_t:1,inline:1,"delete":1,alignof:1,char16_t:1,char32_t:1,constexpr:1,decltype:1,noexcept:1,nullptr:1,static_assert:1,thread_local:1,restrict:1,_Bool:1,complex:1},built_in:{std:1,string:1,cin:1,cout:1,cerr:1,clog:1,stringstream:1,istringstream:1,ostringstream:1,auto_ptr:1,deque:1,list:1,queue:1,stack:1,vector:1,map:1,set:1,bitset:1,multiset:1,multimap:1,unordered_set:1,unordered_map:1,unordered_multiset:1,unordered_multimap:1,array:1,shared_ptr:1}};return{dM:{k:a,i:"</",c:[hljs.CLCM,hljs.CBLCLM,hljs.QSM,{cN:"string",b:"'\\\\?.",e:"'",i:"."},{cN:"number",b:"\\b(\\d+(\\.\\d*)?|\\.\\d+)(u|U|l|L|ul|UL|f|F)"},hljs.CNM,{cN:"preprocessor",b:"#",e:"$"},{cN:"stl_container",b:"\\b(deque|list|queue|stack|vector|map|set|bitset|multiset|multimap|unordered_map|unordered_set|unordered_multiset|unordered_multimap|array)\\s*<",e:">",k:a,r:10,c:["self"]}]}}}();hljs.LANGUAGES.r={dM:{c:[hljs.HCM,{cN:"number",b:"\\b0[xX][0-9a-fA-F]+[Li]?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+(?:[eE][+\\-]?\\d*)?L\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+\\.(?!\\d)(?:i\\b)?",e:hljs.IMMEDIATE_RE,r:1},{cN:"number",b:"\\b\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\.\\d+(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"keyword",b:"(?:tryCatch|library|setGeneric|setGroupGeneric)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\.",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\d+(?![\\w.])",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\b(?:function)",e:hljs.IMMEDIATE_RE,r:2},{cN:"keyword",b:"(?:if|in|break|next|repeat|else|for|return|switch|while|try|stop|warning|require|attach|detach|source|setMethod|setClass)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"literal",b:"(?:NA|NA_integer_|NA_real_|NA_character_|NA_complex_)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"literal",b:"(?:NULL|TRUE|FALSE|T|F|Inf|NaN)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"identifier",b:"[a-zA-Z.][a-zA-Z0-9._]*\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"<\\-(?!\\s*\\d)",e:hljs.IMMEDIATE_RE,r:2},{cN:"operator",b:"\\->|<\\-",e:hljs.IMMEDIATE_RE,r:1},{cN:"operator",b:"%%|~",e:hljs.IMMEDIATE_RE},{cN:"operator",b:">=|<=|==|!=|\\|\\||&&|=|\\+|\\-|\\*|/|\\^|>|<|!|&|\\||\\$|:",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"%",e:"%",i:"\\n",r:1},{cN:"identifier",b:"`",e:"`",r:0},{cN:"string",b:'"',e:'"',c:[hljs.BE],r:0},{cN:"string",b:"'",e:"'",c:[hljs.BE],r:0},{cN:"paren",b:"[[({\\])}]",e:hljs.IMMEDIATE_RE,r:0}]}};
+hljs.initHighlightingOnLoad();
+</script>
+
+<!-- MathJax scripts -->
+<script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<style type="text/css">
+body {
+   font-family: Helvetica, arial, sans-serif;
+   font-size: 14px;
+   line-height: 1.6;
+   padding-top: 10px;
+   padding-bottom: 10px;
+   background-color: white;
+   padding: 30px; }
+
+body > *:first-child {
+   margin-top: 0 !important; }
+body > *:last-child {
+   margin-bottom: 0 !important; }
+
+a {
+   color: #4183C4; }
+a.absent {
+   color: #cc0000; }
+a.anchor {
+   display: block;
+   padding-left: 30px;
+   margin-left: -30px;
+   cursor: pointer;
+   position: absolute;
+   top: 0;
+   left: 0;
+   bottom: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+   margin: 20px 0 10px;
+   padding: 0;
+   font-weight: bold;
+   -webkit-font-smoothing: antialiased;
+   cursor: text;
+   position: relative; }
+
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+   text-decoration: none; }
+
+h1 tt, h1 code {
+   font-size: inherit; }
+
+h2 tt, h2 code {
+   font-size: inherit; }
+
+h3 tt, h3 code {
+   font-size: inherit; }
+
+h4 tt, h4 code {
+   font-size: inherit; }
+
+h5 tt, h5 code {
+   font-size: inherit; }
+
+h6 tt, h6 code {
+   font-size: inherit; }
+
+h1 {
+   font-size: 28px;
+   color: black; }
+
+h2 {
+   font-size: 24px;
+   border-bottom: 1px solid #cccccc;
+   color: black; }
+
+h3 {
+   font-size: 18px; }
+
+h4 {
+   font-size: 16px; }
+
+h5 {
+   font-size: 14px; }
+
+h6 {
+   color: #777777;
+   font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+   margin: 15px 0; }
+
+hr {
+   border: 0 none;
+   color: #cccccc;
+   height: 4px;
+   padding: 0;
+}
+
+body > h2:first-child {
+   margin-top: 0;
+   padding-top: 0; }
+body > h1:first-child {
+   margin-top: 0;
+   padding-top: 0; }
+body > h1:first-child + h2 {
+   margin-top: 0;
+   padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+   margin-top: 0;
+   padding-top: 0; }
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+   margin-top: 0;
+   padding-top: 0; }
+
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+   margin-top: 0; }
+
+li p.first {
+   display: inline-block; }
+li {
+   margin: 0; }
+ul, ol {
+   padding-left: 30px; }
+
+ul :first-child, ol :first-child {
+   margin-top: 0; }
+
+dl {
+   padding: 0; }
+dl dt {
+   font-size: 14px;
+   font-weight: bold;
+   font-style: italic;
+   padding: 0;
+   margin: 15px 0 5px; }
+dl dt:first-child {
+   padding: 0; }
+dl dt > :first-child {
+   margin-top: 0; }
+dl dt > :last-child {
+   margin-bottom: 0; }
+dl dd {
+   margin: 0 0 15px;
+   padding: 0 15px; }
+dl dd > :first-child {
+   margin-top: 0; }
+dl dd > :last-child {
+   margin-bottom: 0; }
+
+blockquote {
+   border-left: 4px solid #dddddd;
+   padding: 0 15px;
+   color: #777777; }
+blockquote > :first-child {
+   margin-top: 0; }
+blockquote > :last-child {
+   margin-bottom: 0; }
+
+table {
+   padding: 0;border-collapse: collapse; }
+table tr {
+   border-top: 1px solid #cccccc;
+   background-color: white;
+   margin: 0;
+   padding: 0; }
+table tr:nth-child(2n) {
+   background-color: #f8f8f8; }
+table tr th {
+   font-weight: bold;
+   border: 1px solid #cccccc;
+   margin: 0;
+   padding: 6px 13px; }
+table tr td {
+   border: 1px solid #cccccc;
+   margin: 0;
+   padding: 6px 13px; }
+table tr th :first-child, table tr td :first-child {
+   margin-top: 0; }
+table tr th :last-child, table tr td :last-child {
+   margin-bottom: 0; }
+
+img {
+   max-width: 100%; }
+
+span.frame {
+   display: block;
+   overflow: hidden; }
+span.frame > span {
+   border: 1px solid #dddddd;
+   display: block;
+   float: left;
+   overflow: hidden;
+   margin: 13px 0 0;
+   padding: 7px;
+   width: auto; }
+span.frame span img {
+   display: block;
+   float: left; }
+span.frame span span {
+   clear: both;
+   color: #333333;
+   display: block;
+   padding: 5px 0 0; }
+span.align-center {
+   display: block;
+   overflow: hidden;
+   clear: both; }
+span.align-center > span {
+   display: block;
+   overflow: hidden;
+   margin: 13px auto 0;
+   text-align: center; }
+span.align-center span img {
+   margin: 0 auto;
+   text-align: center; }
+span.align-right {
+   display: block;
+   overflow: hidden;
+   clear: both; }
+span.align-right > span {
+   display: block;
+   overflow: hidden;
+   margin: 13px 0 0;
+   text-align: right; }
+span.align-right span img {
+   margin: 0;
+   text-align: right; }
+span.float-left {
+   display: block;
+   margin-right: 13px;
+   overflow: hidden;
+   float: left; }
+span.float-left span {
+   margin: 13px 0 0; }
+span.float-right {
+   display: block;
+   margin-left: 13px;
+   overflow: hidden;
+   float: right; }
+span.float-right > span {
+   display: block;
+   overflow: hidden;
+   margin: 13px auto 0;
+   text-align: right; }
+
+code, tt {
+   margin: 0 2px;
+   padding: 0 5px;
+   white-space: nowrap;
+   border: 1px solid #eaeaea;
+   background-color: #f8f8f8;
+   border-radius: 3px; }
+
+pre code {
+   margin: 0;
+   padding: 0;
+   white-space: pre;
+   border: none;
+   background: transparent; }
+
+.highlight pre {
+   background-color: #f8f8f8;
+   border: 1px solid #cccccc;
+   font-size: 13px;
+   line-height: 19px;
+   overflow: auto;
+   padding: 6px 10px;
+   border-radius: 3px; }
+
+pre {
+   background-color: #f8f8f8;
+   border: 1px solid #cccccc;
+   font-size: 13px;
+   line-height: 19px;
+   overflow: auto;
+   padding: 6px 10px;
+   border-radius: 3px; }
+pre code, pre tt {
+   background-color: transparent;
+   border: none; }
+
+sup {
+   font-size: 0.83em;
+   vertical-align: super;
+   line-height: 0;
+}
+* {
+	 -webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+   body {
+      width: 854px;
+      margin:0 auto;
+   }
+}
+@media print {
+	 table, pre {
+		  page-break-inside: avoid;
+	 }
+	 pre {
+		  word-wrap: break-word;
+	 }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<h2>STAT540 Seminar 10: Supervised learning, classification, cross validation, variable selection</h2>
+
+<p><em>Rebecca Johnston 19/03/2014</em></p>
+
+<ul>
+<li><dim id="1a"><a href="#1b">Introduction</a>
+
+<ul>
+<li><dim id="2a"><a href="#2b">Load required packages</a></li>
+<li><dim id="3b"><a href="#3b">Load dataset and perform data preparation</a></li>
+</ul></li>
+<li><dim id="4a"><a href="#4b">Classification</a>
+
+<ul>
+<li><dim id="5a"><a href="#5b">Feature and Model Selection</a>
+
+<ul>
+<li><dim id="6a"><a href="#6b">Cross validation splits</a></li>
+<li><dim id="7a"><a href="#7b">Loop for feature selection and modeling</a></li>
+<li><dim id="8a"><a href="#8b">Error Rates</a></li>
+<li><dim id="9a"><a href="#9b">Results of the CV</a></li>
+</ul></li>
+<li><dim id="10a"><a href="#10b">Testing the selected model</a></li>
+<li><dim id="11a"><a href="#11b">CMA</a></li>
+</ul></li>
+</ul>
+
+<h3><dim id="1b"><a href="#1b">Introduction</a></h3>
+
+<p>In this Seminar we go over packages and codes for performing supervised learning and evaluation in R. In supervised learning, one is given a training data set with known response and covariates and our goal is to predict the response in a new test set for which we only know the covariates. A supervised learning process can be decomposed into the following steps:</p>
+
+<p><em>Step 1</em>: Select Features. Before training a model, in many applications, it is usually important to perform a pre-filtering step in which one retains only the most informative features (e.g., genes) as candidate &ldquo;biomarkers&rdquo;. The amount of features retained to select and train a model is up to the analyst and the methods used in the next steps. For example, some methods may be unfeasible or too slow to run with a large number of features.</p>
+
+<p><em>Step 2</em>: Select and train a classifier. Once the set of candidate markers have been selected, the next step is to select and train a model to predict the labels of a test data.</p>
+
+<p><em>Step 3</em>: Test. Finally, a model is chosen and used to predict labels of a test data.</p>
+
+<p><strong>Cross-validation</strong><br/>
+Although it makes sense to proceed as described above, many methods are available and many constants within methods need to be selected in these steps. Thus, a <em>cross-validation</em> is usually required to <em>evaluate</em> how well different trained models work and select the <em>best</em> model to proceed. Note that although you may only want to select among different choices available in Step 2, the cross-validation needs to start in Step 1. Why? The results of the cross-validation will be over-optimistic and biased if the samples in the test sets of the cross-validation (i.e., left-out folds) were used to <em>select</em> the most promising features in Step 1!! For example, if the performance of a complex model is (artificially) good, you may not penalize regression coefficients enough in Step 2, and may yield to a poor performance in Step 3.</p>
+
+<p>In many studies, in the absence of a test set, cross-validation is used to estimate performance. In those cases, a <em>nested cross-validation</em> is required! The inner cross-validation will be used to select features and tune parameters, the outer cross-validation will be used to a selected test model. Further readings in this topic are available in [1][Ref1] and [2][Ref2].</p>
+
+<p>In this seminar, we will work with a dataset that has both a training and a test set. Thus, we will not do a nested cross-validation. However, keep it in mind for your project or future work!</p>
+
+<h4><dim id="2b"><a href="#2b">Load required packages</a></h4>
+
+<p>There are many packages for performing supervised learning in R, each of which may implement one or more algorithms. There have also been at least two major efforts to unify these libraries under a common framework to make them easier to use: <code>MLInterfaces</code> and <code>CMA</code>. Although these may be useful and save you a lot of time in your analysis, it is important that you understand what these packages are doing and what they are <em>not</em> doing. Thus, I will not use these packages in this Seminar but I encourage you to reproduce the analysis using at least one of them! (I recommend <code>CMA</code>).</p>
+
+<p>Install the following packages from Bioconductor: <code>CMA</code> and <code>GEOquery</code>, and from CRAN: <code>ROCR</code>, <code>car</code>, <code>e1071</code> (for SVM), and <code>glmnet</code>.</p>
+
+<pre><code class="r">library(MASS)
+library(reshape)
+library(car)
+library(limma)
+library(e1071)
+library(glmnet)
+library(ROCR)
+library(CMA)
+library(GEOquery)
+library(lattice)
+library(ggplot2)
+library(class)
+</code></pre>
+
+<h4><dim id="3b"><a href="#3b">Load dataset and perform data preparation</a></h4>
+
+<p>This seminar is based on a dataset that comes from a paper by <a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE23177">Smeets et al. 2010</a>, who studied Affymetrix expression profiles from primary breast tumors. Smeets group was interested in whether whether tumors which had spread to lymph nodes (LN positive, generally a bad sign) have different gene expression profiles than LN negative tumors. If so, a gene expression signature can be use to predict tumor class.</p>
+
+<p>Their data set contains 24236 genes on 116 samples. The status of the lymph node is known for each sample, with 59 LN positive and 57 LN negative. Samples were divided into two parts: 96 samples (48 LN positive and 48 LN negative) were used as a &ldquo;training&rdquo; set and 20 samples (11 LN positive and 9 LN negative) were used as a &ldquo;test&rdquo; set. There is also a quantitative measure, &ldquo;LnRatio&rdquo;, the fraction of affected lymph nodes, presumably reflecting &ldquo;how bad&rdquo; the LnStatus is. Thus, we can use this dataset to illustrate classification and regularization methods! This seminar will focus on the first task, i.e., classification. In the past, Paul selected this dataset to illustrate the challenges of supervised learning tasks!</p>
+
+<p>In the paper, the authors trained a support vector machine classifier to distinguish between LN positive and LN negative tumors (i.e., classification), and evaluated the results using ROC curves. After some optimization, they got an area under the ROC curve (AUC) of 0.66 on the training set and 0.65 on the test data. This is better than chance, but still not very convincing results about the relevance of the derived molecular signature (random chance would give an AUC of 0.5; perfect classification would give an AUC of 1.0).</p>
+
+<p><strong>Data Preparation</strong><br/>
+First, let&#39;s retrieve our datasets from GEO with <code>getGEO</code> from <code>GEOquery</code> package. Warning: this may take several minutes! So to avoid re-downloading in the future, save the data once you get it into a good shape.</p>
+
+<pre><code class="r">if (file.exists(&quot;class_LNstatus.Rdata&quot;)) {
+    # if previously downloaded
+    load(&quot;class_LNstatus.Rdata&quot;)
+} else {
+    # if downloading for the first time takes a several mins! returns a list
+    datgeo &lt;- getGEO(&quot;GSE23177&quot;, GSEMatrix = TRUE)
+    dat &lt;- datgeo[[1]]  # Note that dat is an ExpressionSets
+    str(pData(dat), max.level = 0)
+
+    # extract only those variables of interest
+    pData(dat) &lt;- subset(pData(dat), select = c(&quot;characteristics_ch1.2&quot;, &quot;characteristics_ch1.3&quot;, 
+        &quot;characteristics_ch1&quot;))
+    names(pData(dat)) &lt;- c(&quot;LnStatus&quot;, &quot;LnRatio&quot;, &quot;Set&quot;)
+
+    # Note: LNRatio will not be used in this Seminar. However, you can use it to
+    # try some of the regularization techniques learned in class
+
+    # split the ExpressionSet into training and test sets.
+    train.es &lt;- dat[, dat$Set == &quot;patient type: training set&quot;]
+    test.es &lt;- dat[, dat$Set != &quot;patient type: training set&quot;]
+
+    # Re-label factor
+    pData(train.es)$LnStatus &lt;- recode(pData(train.es)$LnStatus, &quot;levels(pData(train.es)$LnStatus)[1] =&#39; neg&#39;; else = &#39;pos&#39;&quot;, 
+        levels = c(&quot;neg&quot;, &quot;pos&quot;))
+
+    pData(test.es)$LnStatus &lt;- recode(pData(test.es)$LnStatus, &quot;levels(pData(test.es)$LnStatus)[1] = &#39;neg&#39;; else = &#39;pos&#39;&quot;, 
+        levels = c(&quot;neg&quot;, &quot;pos&quot;))
+
+    # create data matrices with expression values (probesets in rows). Some of
+    # the functions we will use do not take ExpressionSets as objects
+    trainDat &lt;- exprs(train.es)
+    testDat &lt;- exprs(test.es)
+
+    # Redefine the quantitative variable LnRatio to make it a numeric variable.
+    ntrain &lt;- dim(pData(train.es))[1]
+    ntest &lt;- dim(pData(test.es))[1]
+
+    pData(train.es)$LnRatio &lt;- as.numeric(unlist(strsplit(as.vector(unlist(pData(train.es)$LnRatio)), 
+        &quot;:&quot;, fixed = TRUE))[(1:ntrain) * 2])
+    pData(test.es)$LnRatio &lt;- as.numeric(unlist(strsplit(as.vector(unlist(pData(test.es)$LnRatio)), 
+        &quot;:&quot;, fixed = TRUE))[(1:ntest) * 2])
+
+    # save the data to avoid future re-downloading
+    save(dat, trainDat, testDat, train.es, test.es, file = &quot;class_LNstatus.Rdata&quot;)
+}
+</code></pre>
+
+<p>Now, we can do some exploratory analysis of the data before trying some classification methods:</p>
+
+<pre><code class="r"># undestand your data for classification
+table(pData(train.es)$LnStatus)
+</code></pre>
+
+<pre><code>## 
+## neg pos 
+##  48  48
+</code></pre>
+
+<pre><code class="r">table(pData(test.es)$LnStatus)
+</code></pre>
+
+<pre><code>## 
+## neg pos 
+##   9  11
+</code></pre>
+
+<pre><code class="r"># understand the continuous response
+tapply(pData(train.es)$LnRatio, pData(train.es)$LnStatus, summary)
+</code></pre>
+
+<pre><code>## $neg
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##       0       0       0       0       0       0 
+## 
+## $pos
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.040   0.070   0.110   0.194   0.228   0.960
+</code></pre>
+
+<pre><code class="r">tapply(pData(test.es)$LnRatio, pData(test.es)$LnStatus, summary)
+</code></pre>
+
+<pre><code>## $neg
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##       0       0       0       0       0       0 
+## 
+## $pos
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.050   0.180   0.500   0.457   0.610   0.940
+</code></pre>
+
+<pre><code class="r"># look at the expression of 3 randomly picked genes in both training and
+# test sets
+set.seed(1234)
+(getMe &lt;- sample(1:nrow(train.es), size = 3))  ## [1] 2756 15082 14766
+</code></pre>
+
+<pre><code>## [1]  2756 15082 14766
+</code></pre>
+
+<pre><code class="r"># training data
+trDat &lt;- trainDat[getMe, ]
+str(trDat)
+</code></pre>
+
+<pre><code>##  num [1:3, 1:96] 7.19 9.17 8.38 7.13 9.38 ...
+##  - attr(*, &quot;dimnames&quot;)=List of 2
+##   ..$ : chr [1:3] &quot;201513_at&quot; &quot;223139_s_at&quot; &quot;222698_s_at&quot;
+##   ..$ : chr [1:96] &quot;GSM570518&quot; &quot;GSM570519&quot; &quot;GSM570520&quot; &quot;GSM570521&quot; ...
+</code></pre>
+
+<pre><code class="r">trDat &lt;- data.frame(LnStatus = pData(train.es)$LnStatus, Set = rep(&quot;train&quot;, 
+    nrow(pData(train.es))), t(trDat))
+str(trDat)
+</code></pre>
+
+<pre><code>## &#39;data.frame&#39;:    96 obs. of  5 variables:
+##  $ LnStatus    : Factor w/ 2 levels &quot;neg&quot;,&quot;pos&quot;: 1 1 2 1 1 2 1 1 2 1 ...
+##  $ Set         : Factor w/ 1 level &quot;train&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ X201513_at  : num  7.19 7.13 7.39 6.86 6.96 ...
+##  $ X223139_s_at: num  9.17 9.38 9.03 9.55 9.5 ...
+##  $ X222698_s_at: num  8.38 8.24 7.23 7.87 8.45 ...
+</code></pre>
+
+<pre><code class="r">plotDat.train &lt;- melt(trDat, id = c(&quot;LnStatus&quot;, &quot;Set&quot;), variable_name = &quot;gene&quot;)
+colnames(plotDat.train)[colnames(plotDat.train) == &quot;value&quot;] = &quot;gExp&quot;
+
+# test data
+tDat &lt;- testDat[getMe, ]
+str(tDat)
+</code></pre>
+
+<pre><code>##  num [1:3, 1:20] 6.05 9.15 7.55 6.87 8.95 ...
+##  - attr(*, &quot;dimnames&quot;)=List of 2
+##   ..$ : chr [1:3] &quot;201513_at&quot; &quot;223139_s_at&quot; &quot;222698_s_at&quot;
+##   ..$ : chr [1:20] &quot;GSM570498&quot; &quot;GSM570499&quot; &quot;GSM570500&quot; &quot;GSM570501&quot; ...
+</code></pre>
+
+<pre><code class="r">tDat &lt;- data.frame(LnStatus = pData(test.es)$LnStatus, Set = rep(&quot;test&quot;, nrow(pData(test.es))), 
+    t(tDat))
+str(tDat)
+</code></pre>
+
+<pre><code>## &#39;data.frame&#39;:    20 obs. of  5 variables:
+##  $ LnStatus    : Factor w/ 2 levels &quot;neg&quot;,&quot;pos&quot;: 1 1 1 1 1 1 1 1 1 2 ...
+##  $ Set         : Factor w/ 1 level &quot;test&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ X201513_at  : num  6.05 6.87 6.71 8 6.54 ...
+##  $ X223139_s_at: num  9.15 8.95 9.09 9.81 9.2 ...
+##  $ X222698_s_at: num  7.55 8.34 8.32 7.33 8.14 ...
+</code></pre>
+
+<pre><code class="r">plotDat.test &lt;- melt(tDat, id = c(&quot;LnStatus&quot;, &quot;Set&quot;), variable_name = &quot;gene&quot;)
+colnames(plotDat.test)[colnames(plotDat.test) == &quot;value&quot;] = &quot;gExp&quot;
+
+plotDat &lt;- rbind(plotDat.train, plotDat.test)
+head(plotDat)
+</code></pre>
+
+<pre><code>##   LnStatus   Set       gene  gExp
+## 1      neg train X201513_at 7.192
+## 2      neg train X201513_at 7.131
+## 3      pos train X201513_at 7.395
+## 4      neg train X201513_at 6.858
+## 5      neg train X201513_at 6.955
+## 6      pos train X201513_at 7.464
+</code></pre>
+
+<pre><code class="r"># plot 3 randomly picked genes in both training and test sets using ggplot2
+ggplot(plotDat, aes(LnStatus, gExp, colour = LnStatus)) + geom_point(alpha = 0.5) + 
+    facet_wrap(~gene + Set)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-3"/> </p>
+
+<h3><dim id="4b"><a href="#4b">Classification</a></h3>
+
+<p>The prediction of a discrete response is usually refer to as <em>classification</em>. A response taking values over a finite set of labels is essentially the same thing as a factor. We will use the dataset from Smeets et al. to find the <em>best-trained</em> classifier and use it to predict the <code>LnStatus</code> of the 20 samples in the test set, i.e., classify those as &ldquo;lymph node positive&rdquo; or &ldquo;negative&rdquo;.</p>
+
+<h4><dim id="5b"><a href="#5b">Feature and Model Selection</a></h4>
+
+<p>We will first identify the best set of features that we will use to train the model using a cross-validation. Thus, I will divide the training set into 6 folds (the authors used 10 folds). We also want the proportion of positive and negative examples in each split to be approximately the same as for the full data set (i.e., stratified 6-fold CV with 8 positive and 8 negative samples within each fold). For each round of cross-validation, we use one fold as the test data and the rest of the data as training to select features and train different classifier.</p>
+
+<h4><dim id="6b"><a href="#6b">Cross validation splits</a></h4>
+
+<p>This is not the only way to create splits of the training data to run a cross-validation. Note that if the samples can not be evenly divided into the nfolds you specified, then you need to complete the matrices below with NAs and call for entries different from NA at those folds.</p>
+
+<pre><code class="r">nfold &lt;- 6
+tabTrain &lt;- table(train.es$LnStatus)
+indlist &lt;- sapply(names(tabTrain), function(z) which(train.es$LnStatus == z), 
+    simplify = FALSE)
+set.seed(1234)
+# Each row contains 8 pos and 8 negative samples.
+fold.pos &lt;- matrix(sample(indlist[[&quot;pos&quot;]]), nrow = nfold)
+fold.neg &lt;- matrix(sample(indlist[[&quot;neg&quot;]]), nrow = nfold)
+</code></pre>
+
+<p><em>Note</em>: with <code>CMA</code> you can use the command <code>GenerateLearningsets</code> to split the training data into folds. However, it does not show you how the data was split. Thus, you either use CMA for all or you write your own script.</p>
+
+<pre><code class="r">splits &lt;- GenerateLearningsets(y = train.es$LnStatus, method = &quot;CV&quot;, fold = 6, 
+    strat = TRUE)
+</code></pre>
+
+<h4><dim id="7b"><a href="#7b">Loop for feature selection and modeling</a></h4>
+
+<p>To illustrate how to select a model, I will use the top-50 genes selected by <code>limma</code> (within each fold). Note that this number is very arbitrary and other options may make more sense like using a p-value threshold or testing different options with this CV. For this example, I&#39;m using only the top-50 genes as methods like LDA and Logit can not be run on more features than samples. However, other methods like kNN or SVM will do well with more features.</p>
+
+<p>In this example, I will compare 7 different models: kNN for k={1,5,10,15}, LDA, Logit, SVM. Feel free to add other methods to the list!</p>
+
+<pre><code class="r"># Define here the constants that you will not evaluate. For example, I will
+# use the top-50 limma genes
+ngenes &lt;- 50
+nmethod &lt;- 7  #number of methods you plan to compare.
+
+# Define here an output objects to store results
+pr.err &lt;- matrix(-1, nfold, nmethod, dimnames = list(paste0(&quot;Fold&quot;, 1:nfold), 
+    c(&quot;1NN&quot;, &quot;5NN&quot;, &quot;10NN&quot;, &quot;15NN&quot;, &quot;LDA&quot;, &quot;Logit&quot;, &quot;SVM&quot;)))
+for (i in 1:nfold) {
+
+    # Test Fold for the i-th step
+    testdat.fold &lt;- trainDat[, c(fold.pos[i, ], fold.neg[i, ])]
+    # I will create a factor of classes for the test set of the i_th fold
+    testclass.fold &lt;- train.es$LnStatus[c(fold.pos[i, ], fold.neg[i, ])]
+
+    # The rest of the samples are the training set for the i-th step
+    traindat.fold &lt;- trainDat[, -c(fold.pos[i, ], fold.neg[i, ])]
+    trainclass.fold &lt;- train.es$LnStatus[-c(fold.pos[i, ], fold.neg[i, ])]
+
+    # Step 1: feature selection (do you remember limma?)  Note that a different
+    # set of genes will be selected for each fold! you can then compare how
+    # consistent these sets were.
+    limma.dat &lt;- as.data.frame(traindat.fold)
+    desMat &lt;- model.matrix(~trainclass.fold, limma.dat)  # design matrix
+    trainFit &lt;- lmFit(limma.dat, desMat)
+    eBtrainFit &lt;- eBayes(trainFit)
+
+    # top-50 limma genes
+    top.fold &lt;- topTable(eBtrainFit, coef = which(colnames(coef(trainFit)) != 
+        &quot;(Intercept)&quot;), n = ngenes, sort.by = &quot;P&quot;)
+
+    # Retain the top-50 limma genes from the train and test sets
+    traindat.fold &lt;- traindat.fold[rownames(top.fold), ]
+    testdat.fold &lt;- testdat.fold[rownames(top.fold), ]
+
+    # STEP 2: select a classifier Set a counter for the method tested
+    l &lt;- 0
+
+    # kNN classifiers
+    for (kk in c(1, 5, 10, 15)) {
+        # every time you get inside this loop, the l counter gets redefined (i.e.,
+        # 1, 2, etc for method 1, method 2, etc)
+        l &lt;- l + 1
+
+        # knn needs samples in rows
+        yhat.knn &lt;- knn(train = t(traindat.fold), test = t(testdat.fold), cl = trainclass.fold, 
+            k = kk)
+        # Store the prediction error for each kk within this fold
+        pr.err[i, l] &lt;- mean(testclass.fold != yhat.knn)
+    }  # end of kNN loop
+
+    # LDA method. Note that you can change the prior parameter to reflect a
+    # different proportion of case and control samples. The default is to use
+    # the class proportions from the training set.
+
+    m.lda &lt;- lda(x = t(traindat.fold), group = trainclass.fold, prior = c(0.5, 
+        0.5))
+    yhat.lda &lt;- predict(m.lda, newdata = t(testdat.fold))$class
+    pr.err[i, &quot;LDA&quot;] &lt;- mean(testclass.fold != yhat.lda)
+
+    # Logit
+    glm.dat &lt;- data.frame(t(traindat.fold), group = trainclass.fold)
+    m.log &lt;- glm(group ~ ., data = glm.dat, family = binomial)
+    pr.log &lt;- predict(m.log, newdata = data.frame(t(testdat.fold)), type = &quot;response&quot;)
+    pr.cl &lt;- rep(0, length(testclass.fold))
+    pr.cl[pr.log &gt; 1/2] &lt;- &quot;pos&quot;
+    pr.cl[pr.log &lt;= 1/2] &lt;- &quot;neg&quot;
+    pr.cl &lt;- factor(pr.cl)
+    pr.err[i, &quot;Logit&quot;] &lt;- mean(pr.cl != testclass.fold)
+
+    # SVM
+    m.svm &lt;- svm(x = t(traindat.fold), y = trainclass.fold, cost = 1, type = &quot;C-classification&quot;, 
+        kernel = &quot;linear&quot;)
+    pr.svm &lt;- predict(m.svm, newdata = t(testdat.fold))
+
+    pr.err[i, &quot;SVM&quot;] &lt;- mean(pr.svm != testclass.fold)
+}  # end of CV loop
+</code></pre>
+
+<pre><code>## Warning: glm.fit: algorithm did not converge
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+## Warning: glm.fit: algorithm did not converge
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+## Warning: glm.fit: algorithm did not converge
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+## Warning: glm.fit: algorithm did not converge
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+## Warning: glm.fit: algorithm did not converge
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+## Warning: glm.fit: algorithm did not converge
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</code></pre>
+
+<pre><code class="r">## JB: I get &#39;There were 12 warnings&#39;
+</code></pre>
+
+<h4><dim id="8b"><a href="#8b">Error Rates</a></h4>
+
+<p>Now you can get the average prediction error for all methods. Note that the prediction errors are high! not too much hope for the real test run!</p>
+
+<pre><code class="r">cv.err &lt;- colMeans(pr.err)
+
+# mean - 1 sd (sd of the 6 error rates)
+ls &lt;- cv.err - apply(pr.err, 2, sd)
+
+# mean + 1 sd (sd of the 6 error rates)
+us &lt;- cv.err + apply(pr.err, 2, sd)
+
+# plot the results
+plot(1:nmethod, cv.err, ylim = c(0, 1), xlim = c(1, (nmethod + 0.5)), type = &quot;n&quot;, 
+    axes = FALSE, xlab = &quot;Classifier&quot;, ylab = &quot;Error rate&quot;, main = &quot;6-fold CV Error&quot;)
+
+for (j in 1:ncol(pr.err)) points(jitter(rep(j, 6), factor = 2), jitter(pr.err[, 
+    j]), cex = 0.8, pch = &quot;X&quot;, col = &quot;gray&quot;)
+
+for (i in 1:nmethod) lines(c(i, i), c(ls[i], us[i]), lwd = 2, col = &quot;gray&quot;)
+points(1:nmethod, ls, pch = 19, col = &quot;red&quot;)
+points(1:nmethod, us, pch = 19, col = &quot;green&quot;)
+points(1:nmethod, cv.err, pch = 19, cex = 1.5, col = &quot;black&quot;)
+axis(2, ylab = &quot;Error rate&quot;)
+axis(1, 1:nmethod, colnames(pr.err))
+
+box()
+</code></pre>
+
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfgAAAH4CAMAAACR9g9NAAABhlBMVEX9/v0AAAAAADkAAGUAOTkAOWUAOY8AZo8AZrUA/wA5AAA5ADk5AGU5OWU5OY85ZmU5Zo85ZrU5j485j9plAABlADllAGVlOQBlOTllOY9lZjllZmVlZrVltbVltf2POQCPOTmPOWWPZo+Pj2WPtY+P27WP29qP2/21ZgC1Zjm1tWW124+1/rW1/tq1/v2+vr6+vsm+wb6+xNm+xs++yM++yd7AvsXAvsfAyeHBvsHBvszBvtDB1PPFvr7F3+HHz8fH1OjH3/PIvsjI1OjI2dnI2tnI297I3+HI3/PJvr7MvsHM6ejPwL7Pxb7QvsHUvsXUvtTUwb7U0L7U4d7U6dTU6f3U8+jajznaj2Xa24/a/rXa/tra/v3bxb7b1L7ex77eyb7e28ne4dTe4s/e4tTe6d7e8/3h1Mjh38Xh/v3ozb7o1L7o1Mfo1Mjo6c3o/ujo/v3r38jz1MHz38jz/v39tWX924/96dT989T98979/rX9/tr9/uH9/uj9/uv9/vP9/v3/AACIZRjEAAAAgnRSTlP//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////wD/GfGU4gAAAAlwSFlzAAALEgAACxIB0t1+/AAAE3BJREFUeJztnYmf20YVx582dNlsQwrspifYKQRsKMRc5T4ToOEOp2m7QDhSjhIobO2SNWGV/5yZkWTLa3tXc2iexu/3/aS1d9dPetZXc0iakSgHIiHuBAAPxJ0A4IG4EwA8EHcCgAfiTgDwQNwJAB6IOwHAA3EnAHgg7gQAD8SdAOCBuBMAPBB3AoAH4k4A8EDcCQAeiDsBwANxJwB4IO4EAA/EnQDggbgTADwQdwKAB+JOAPBA3AkAHog7AcADcScAeCDuBAAPxJ1AWwyzbPeofD/dz3YG1R9ODi/dLN9UHzg5zLLsIJ/1s576aVIEml9mtcDtgrgTaImhlrY3/6G3+Muq+IkxrD49NhFDtQ/kEJ8m2m5lWBVkU/rHplgX4vXvPliKV+/Vr8dK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" alt="plot of chunk unnamed-chunk-8"/> </p>
+
+<h3><dim id="9b"><a href="#9b">Results of the CV</a></h3>
+
+<p>According to these results, 1NN and 10NN may be the better classifier to try in the test data. However, remember that this CV results depend on the first split of the data we did. Thus, we need to repeat this CV.</p>
+
+<p><strong>Exercise 1</strong>: perform 100 runs of this CV before selecting a model to test! Add at least on model to the list of models, e.g., use genes with a p-val threshold &lt; cutoff.</p>
+
+<p><strong>Exercise 2</strong>: Use AUC as a criteria to select a model based on the training data! Tip: extract the predicted probabilities from each method and use the roc function in ROCR.</p>
+
+<h3><dim id="10b"><a href="#10b">Testing the selected model</a></h3>
+
+<p>Now that we decided on which method we are going to use to classify samples in the test set, we need to train the model using the <em>FULL</em> training set and then classify samples of the test set. I will use the 10NN model.</p>
+
+<pre><code class="r">yhat.knn &lt;- knn(train = t(trainDat), test = t(testDat), cl = train.es$LnStatus, 
+    k = 10)
+# Store the prediction error for each kk within this fold
+pr.errTest &lt;- mean(test.es$LnStatus != yhat.knn)
+pr.errTest
+</code></pre>
+
+<p>Not good! In real practice, you should not keep trying until we get a good result! However, in this seminar, I encourage you to try different options as an exercise and to see how much the results can change.</p>
+
+<h3><dim id="11b"><a href="#11b">CMA</a></h3>
+
+<p>Many steps of the CV defined above can be easily done with CMA. For example, Step 1 in the loop above can also be done using &#39;CMA&#39; with the function &#39;GeneSelection&#39;, which selects the most informative features (e.g., gene) to build a classifier within each of the splits generated by &#39;GenerateLearningsets&#39;. Some learning algorithms do better if you only give them &ldquo;useful&rdquo; features.</p>
+
+<pre><code class="r">featureScores &lt;- GeneSelection(X = t(trainDat), y = train.es$LnStatus, learningsets = splits, 
+    method = &quot;limma&quot;)
+
+# Compare list of selected genes using:
+toplist(featureScores)
+# We can aggregate the results across the 6 splits.
+seliter &lt;- numeric()
+for (i in 1:nfold) seliter &lt;- c(seliter, toplist(featureScores, iter = i, top = 10, 
+    show = FALSE)$index)
+sort(table(seliter), dec = TRUE)  # summarize
+# Choose the 20 probes which are chosen most commonly in the 6 splits
+bestprobes &lt;- as.numeric(names(sort(table(seliter), dec = TRUE)))[1:20]
+
+# examine the annotations. I just selected a few columns from the fData of
+# the eSet.
+fData(dat)[bestprobes, c(&quot;Gene Symbol&quot;, &quot;Gene Title&quot;, &quot;ENTREZ_GENE_ID&quot;, &quot;Representative Public ID&quot;)]
+</code></pre>
+
+<p>This looks promising since I get TTC3 and at least a couple of other genes that show up on Table 3 of the paper.</p>
+
+<p>Similarly, you can use CMA to train and test a classifier within each CV fold (learningsets). However, there are things you can not do within CMA or that CMA is not doing right. For example, CMA can not do a full nested cross-validation. Additionally, it is not trivial to train the selected in the full dataset and then test it in the test set. CMA is more designed for CV. Thus, it is good to know how to do this things by hand as well.</p>
+
+<p>Paul solved this problem in the following way: he made a <code>learningsets</code> object that has just one &ldquo;split&rdquo; defined by the samples in the training set.</p>
+
+<pre><code class="r">m &lt;- matrix(which(dat$Set == &quot;patient type: training set&quot;), 1)
+
+full.learningset &lt;- new(&quot;learningsets&quot;, learnmatrix = m, method = &quot;my own&quot;, 
+    ntrain = 96, iter = 1)
+
+fullFeatureScores &lt;- GeneSelection(X = t(exprs(dat)), learningsets = full.learningset, 
+    y = dat$LnStatus, method = &quot;t.test&quot;)
+
+testclassif &lt;- classification(X = t(exprs(dat)), y = dat$LnStatus, learningsets = full.learningset, 
+    genesel = fullFeatureScores, nbgene = 100, classifier = pknnCMA, k = 5)
+
+# Evaluation:
+tres &lt;- testclassif[[1]]
+ftable(tres)
+roc(tres)
+</code></pre>
+
+<p>Note: This optimized classifier did terribly as well.</p>
+
+<p><strong>Discussion points</strong><br/>
+How good do you think a classifier will have to be to be clinically relevant? What level of specificity or sensitivity do you think is &ldquo;good enough&rdquo;? The author&#39;s data set has half lymph-node positive and half negative. The incidence of lymph-node-positive breast cancer is about 33% at the time of diagnosis (according to [<a href="http://seer.cancer.gov/statfacts/html/breast.html%5D">http://seer.cancer.gov/statfacts/html/breast.html]</a>). How does that affect your opinion about the classifier?</p>
+
+<p><strong>References</strong><br/>
+[Ref1]: Varma S, Simon R: Bias in error estimation when using cross-validation for model selection. BMC Bioinformatics 2006, 7:91.</p>
+
+<p>[Ref2]: Statnikov A, Aliferis CF, Tsamardinos I, Hardin D, Levy S: A comprehensive evaluation of multicategory classification methods for microarray gene expression cancer diagnosis. Bioinformatics 2005, 21:631-643.</p>
+
+</body>
+
+</html>
